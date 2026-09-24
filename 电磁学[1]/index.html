@@ -6,12 +6,22 @@
   <meta name="theme-color" content="#0d1726">
   <title>电磁学 [1] · 电场与电路交互实验室</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../site.css">
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
   <div class="app-shell">
     <header class="site-header">
-      <div class="brand-mark" aria-hidden="true">ϵ</div>
+      <details class="project-switcher">
+        <summary class="brand-mark" aria-label="切换项目页面" title="切换项目页面">ϵ</summary>
+        <nav class="project-menu" aria-label="项目页面">
+          <span class="project-menu-heading">选择项目包</span>
+          <a href="../电磁学[1]/index.html" aria-label="电磁学 [1]，当前页面" aria-current="page"><span>01</span> 电磁学 [1]<small>当前页面</small></a>
+          <a href="../电磁学[2]/index.html" aria-label="切换到电磁学 [2]"><span>02</span> 电磁学 [2]<small>待建设</small></a>
+          <a href="../光学/index.html" aria-label="切换到光学"><span>03</span> 光学<small>待建设</small></a>
+          <a href="../近代物理学/index.html" aria-label="切换到近代物理学"><span>04</span> 近代物理学<small>待建设</small></a>
+        </nav>
+      </details>
       <div class="brand-copy">
         <span class="eyebrow">大学物理 · 交互模型</span>
         <h1>电磁学 <span>[1]</span></h1>
@@ -42,7 +52,7 @@
       <section class="model-panel is-active" id="coulomb" aria-labelledby="coulomb-title">
         <div class="model-heading">
           <div><p class="section-kicker">MODEL 01 / ELECTRIC FORCE</p><h3 id="coulomb-title">两个点电荷如何相互作用？</h3><p>拖动电荷改变相对位置；改变电荷量，观察力的大小和方向。</p></div>
-          <div class="formula">F = k |q₁q₂| / r²</div>
+          <div class="formula">F = |q₁q₂| / (4πε₀r²)</div>
         </div>
         <div class="workspace">
           <div class="canvas-card">
@@ -65,28 +75,30 @@
 
       <section class="model-panel" id="field" aria-labelledby="field-title" hidden>
         <div class="model-heading">
-          <div><p class="section-kicker">MODEL 02 / FIELD & POTENTIAL</p><h3 id="field-title">电荷如何改变周围的空间？</h3><p>拖动电荷或白色探针，比较电场方向与等势线的关系。</p></div>
-          <div class="formula">E = Σ kqᵢ Δrᵢ / |Δrᵢ|³</div>
+          <div><p class="section-kicker">MODEL 02 / FIELD & POTENTIAL</p><h3 id="field-title">电荷如何改变周围的空间？</h3><p>拖动电荷或白色探针，观察连续电场线如何穿过等势线。</p></div>
+          <div class="formula">E = Σ qᵢ Δrᵢ / (4πε₀|Δrᵢ|³)</div>
         </div>
         <div class="workspace">
           <div class="canvas-card">
             <div class="canvas-topline"><span class="live-dot"></span> 实时模拟 <span class="canvas-hint">点击电荷可选中；拖动白色探针</span></div>
-            <canvas id="field-canvas" aria-label="可拖动点电荷、电场矢量、等势线与探针"></canvas>
-            <div class="canvas-footer"><span><i class="legend-field"></i> 电场矢量</span><span><i class="legend-potential"></i> 等势线</span><span><i class="legend-probe"></i> 探针</span></div>
+            <canvas id="field-canvas" aria-label="可拖动点电荷、电场线、电场矢量、等势线与探针"></canvas>
+            <div class="canvas-footer"><span><i class="legend-field"></i> 电场线与方向</span><span><i class="legend-potential"></i> 等势线</span><span><i class="legend-probe"></i> 探针</span></div>
           </div>
           <aside class="control-card" aria-label="电场参数">
             <h4>实验参数</h4>
             <div class="button-row"><button class="action-button positive" id="add-positive" type="button">＋ 正电荷</button><button class="action-button negative" id="add-negative" type="button">− 负电荷</button></div>
             <label class="range-control" for="field-charge"><span id="selected-label">选中电荷</span><output id="field-charge-value">+5 nC</output><input id="field-charge" type="range" min="-10" max="10" step="1" value="5"></label>
             <div class="button-row"><button class="secondary-button" id="remove-charge" type="button">删除选中</button><button class="secondary-button" id="field-reset" type="button">重置</button></div>
-            <label class="check-control"><input id="show-vectors" type="checkbox" checked> 显示电场矢量</label>
+            <label class="check-control"><input id="show-lines" type="checkbox" checked> 显示电场线</label>
+            <label class="range-control" for="line-density"><span>电场线密度</span><output id="line-density-value">约 14 条 / 5 nC</output><input id="line-density" type="range" min="6" max="24" step="2" value="14"></label>
+            <label class="check-control"><input id="show-vectors" type="checkbox"> 显示电场矢量</label>
             <label class="check-control"><input id="show-contours" type="checkbox" checked> 显示等势线</label>
             <div class="readout"><span>探针处 |E|</span><strong id="field-magnitude">—</strong></div>
             <div class="readout emph"><span>探针处电势 V</span><strong id="field-potential">—</strong></div>
             <p class="interpretation" id="field-description">电场方向为正试探电荷所受力的方向。</p>
           </aside>
         </div>
-        <p class="model-note"><strong>模型条件</strong> 真空中的点电荷叠加；电势以无穷远处为零。等势线是数值近似，探针距电荷小于 1 cm 时读数不显示。</p>
+        <p class="model-note"><strong>模型条件</strong> 真空中的点电荷叠加；电势以无穷远处为零。电场线箭头沿正试探电荷受力方向，画布边界表示场线仍向可视范围外延伸；线条疏密只用于定性观察，等势线是数值近似。探针距电荷小于 1 cm 时读数不显示。</p>
       </section>
 
       <section class="model-panel" id="capacitor" aria-labelledby="capacitor-title" hidden>

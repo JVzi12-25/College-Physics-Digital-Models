@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { K, EPSILON_0, ELEMENTARY_CHARGE, coulombForceOnFirst, electricFieldAt, electricPotentialAt, parallelPlateCapacitor, uniformChargedSphere, chargedCylindricalShell, infiniteChargedPlane, particleInUniformField, rcCircuit } from '../js/physics.js';
+import { EPSILON_0, ELEMENTARY_CHARGE, coulombForceOnFirst, electricFieldAt, electricPotentialAt, parallelPlateCapacitor, uniformChargedSphere, chargedCylindricalShell, infiniteChargedPlane, particleInUniformField, rcCircuit } from '../js/physics.js';
+
+const coulombFactor = 1 / (4 * Math.PI * EPSILON_0);
 
 function near(actual, expected, relativeTolerance = 1e-12) {
   assert.ok(Math.abs(actual - expected) <= Math.max(Math.abs(expected) * relativeTolerance, 1e-12), `${actual} != ${expected}`);
@@ -11,7 +13,7 @@ test('库仑力遵循反平方律且同号相斥', () => {
   const b = coulombForceOnFirst(1e-9, 2e-9, { x: 0, y: 0 }, { x: 0.2, y: 0 });
   assert.ok(a.x < 0);
   near(a.magnitude / b.magnitude, 4);
-  near(a.magnitude, K * 2e-18 / 0.01);
+  near(a.magnitude, coulombFactor * 2e-18 / 0.01);
 });
 
 test('等量异号点电荷在中心的电势抵消、电场叠加', () => {
@@ -19,8 +21,9 @@ test('等量异号点电荷在中心的电势抵消、电场叠加', () => {
   const p = { x: 0, y: 0 };
   near(electricPotentialAt(charges, p), 0);
   const field = electricFieldAt(charges, p);
-  near(field.x, 2 * K * 1e-9 / 0.01);
+  near(field.x, 2 * coulombFactor * 1e-9 / 0.01);
   near(field.y, 0);
+  near(electricPotentialAt([{ x: -0.1, y: 0, q: 1e-9 }], p), coulombFactor * 1e-9 / 0.1);
 });
 
 test('理想平行板电容器量纲与能量关系', () => {

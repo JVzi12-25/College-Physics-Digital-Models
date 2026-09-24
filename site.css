@@ -1,0 +1,64 @@
+:root {
+  color-scheme: dark;
+  font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  background: #0b1422;
+  color: #e9f0f5;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(circle at 87% 5%, #183348 0, transparent 29%), #0b1422; }
+.app-shell { max-width: 1450px; margin: auto; padding: 0 38px; }
+.site-header { position: relative; z-index: 10; display: flex; align-items: center; gap: 14px; min-height: 100px; border-bottom: 1px solid #263c4a; }
+.brand-copy { display: flex; flex-direction: column; }
+.eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .17em; color: #78d6bd; }
+.brand-copy h1 { font-size: 22px; letter-spacing: .04em; margin: 2px 0; }
+.brand-copy h1 span { color: #7edbc1; }
+.header-note { margin-left: auto; color: #95a8b8; font-size: 13px; }
+.github-watermark { display: flex; flex-direction: column; align-items: flex-end; flex: 0 1 auto; margin-left: 18px; max-width: 45%; color: #a0bac0; opacity: .58; text-align: right; overflow-wrap: anywhere; user-select: none; pointer-events: none; }
+.github-watermark-label { font-size: 10px; font-weight: 800; letter-spacing: .25em; }
+.github-watermark-name { font-size: clamp(15px, 1.7vw, 23px); font-weight: 800; letter-spacing: .04em; line-height: 1.3; }
+.site-footer { display: flex; justify-content: space-between; padding: 23px 0 35px; border-top: 1px solid #263c4a; color: #708c9b; font-size: 11px; letter-spacing: .08em; }
+
+.project-switcher { position: relative; flex: 0 0 auto; }
+.project-switcher > summary { list-style: none; }
+.project-switcher > summary::-webkit-details-marker { display: none; }
+.project-switcher .brand-mark { position: relative; display: grid; place-items: center; width: 50px; height: 50px; border: 1px solid #76dec4; border-radius: 15px; color: #76dec4; font: italic 35px Georgia, serif; box-shadow: inset 0 0 22px #76dec421; cursor: pointer; transition: background .18s, box-shadow .18s, transform .18s; }
+.project-switcher .brand-mark::after { content: "⌄"; position: absolute; right: -6px; bottom: -6px; display: grid; place-items: center; width: 19px; height: 19px; border: 1px solid #76dec4; border-radius: 7px; background: #16352f; color: #b0f4df; font: 700 16px/1 sans-serif; }
+.project-switcher .brand-mark:hover, .project-switcher[open] .brand-mark { background: #173e37; box-shadow: 0 0 0 4px #76dec421; transform: translateY(-1px); }
+.project-switcher .brand-mark:focus-visible, .project-menu a:focus-visible { outline: 2px solid #f5ce74; outline-offset: 3px; }
+.project-menu { position: absolute; top: calc(100% + 16px); left: 0; width: 310px; max-width: calc(100vw - 32px); padding: 10px; border: 1px solid #42695f; border-radius: 16px; background: #102634; box-shadow: 0 20px 50px #0009; }
+.project-menu-heading { display: block; padding: 9px 12px 12px; color: #83acb5; font-size: 11px; font-weight: 800; letter-spacing: .14em; }
+.project-menu a { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 8px 12px; border-radius: 9px; color: #e0ebef; text-decoration: none; font-size: 14px; font-weight: 700; }
+.project-menu a:hover { background: #203e49; }
+.project-menu a[aria-current="page"] { background: #1a4a43; color: #aff2da; }
+.project-menu a > span { color: #80bdad; font: 700 11px/1 monospace; }
+.project-menu a > small { margin-left: auto; color: #8ca7af; font-size: 11px; font-weight: 500; }
+.project-menu a[aria-current="page"] > small { color: #aff2da; }
+
+.pending-page { --accent: #80dec3; }
+.pending-page.optics { --accent: #d7be83; }
+.pending-page.modern { --accent: #b4a8e8; }
+.pending-page .brand-copy h1 span { color: var(--accent); }
+.pending-main { display: grid; align-content: center; min-height: min(680px, calc(100vh - 180px)); padding: 80px 0 100px; }
+.pending-kicker { margin: 0 0 18px; color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .2em; }
+.pending-main h2 { max-width: 850px; margin: 0; font-size: clamp(42px, 6vw, 76px); line-height: 1.14; letter-spacing: -.05em; }
+.pending-main h2 em { color: var(--accent); font-style: normal; }
+.pending-main > p:not(.pending-kicker) { max-width: 620px; margin: 24px 0 34px; color: #acc1cc; font-size: 16px; line-height: 1.8; }
+.pending-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.pending-actions a { display: inline-flex; align-items: center; min-height: 46px; padding: 11px 18px; border: 1px solid #518a79; border-radius: 10px; background: #173e37; color: #d6fff0; font-size: 13px; font-weight: 700; text-decoration: none; }
+.pending-actions a:hover { border-color: var(--accent); background: #205247; }
+.pending-actions span { color: #86a0ae; font-size: 12px; }
+
+@media (max-width: 640px) {
+  .app-shell { padding: 0 16px; }
+  .site-header { min-height: 78px; }
+  .header-note { display: none; }
+  .github-watermark { margin-left: auto; max-width: 48%; }
+  .github-watermark-label { font-size: 8px; }
+  .github-watermark-name { font-size: 12px; }
+  .project-menu { left: -2px; }
+  .pending-main { min-height: calc(100vh - 150px); padding: 60px 0; }
+  .pending-main > p:not(.pending-kicker) { font-size: 14px; }
+  .site-footer { gap: 20px; line-height: 1.6; }
+}

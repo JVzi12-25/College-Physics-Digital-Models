@@ -1,4 +1,5 @@
 import { coulombForceOnFirst, electricFieldAt, electricPotentialAt, parallelPlateCapacitor, uniformChargedSphere, chargedCylindricalShell, infiniteChargedPlane, particleInUniformField, rcCircuit } from './physics.js';
+import { traceElectricFieldLines } from './field-lines.js';
 
 const $ = (id) => document.getElementById(id);
 const number = (value, digits = 2) => new Intl.NumberFormat('zh-CN', { maximumFractionDigits: digits }).format(value);
@@ -192,11 +193,46 @@ function fieldVectors(view) {
   }
 }
 
+function fieldLines(view) {
+  const { ctx, width, height, scale } = view;
+  const bounds = { left: -width / (2 * scale), right: width / (2 * scale), bottom: -height / (2 * scale), top: height / (2 * scale) };
+  const lines = traceElectricFieldLines(field.charges, bounds, Number($('line-density').value));
+  ctx.save();
+  ctx.strokeStyle = '#81e8c6';
+  ctx.fillStyle = '#a9f5da';
+  ctx.lineWidth = 1.7;
+  ctx.lineJoin = 'round';
+  for (const line of lines) {
+    ctx.beginPath();
+    line.forEach((point, index) => {
+      const screen = toScreen(point, view);
+      if (index === 0) ctx.moveTo(screen.x, screen.y); else ctx.lineTo(screen.x, screen.y);
+    });
+    ctx.stroke();
+    const fractions = line.length > 140 ? [0.35, 0.72] : [0.57];
+    for (const fraction of fractions) {
+      const index = Math.max(2, Math.min(line.length - 3, Math.round((line.length - 1) * fraction)));
+      const before = toScreen(line[index - 2], view);
+      const tip = toScreen(line[index + 2], view);
+      const angle = Math.atan2(tip.y - before.y, tip.x - before.x);
+      const point = toScreen(line[index], view);
+      ctx.beginPath();
+      ctx.moveTo(point.x + 6 * Math.cos(angle), point.y + 6 * Math.sin(angle));
+      ctx.lineTo(point.x - 5 * Math.cos(angle - 0.55), point.y - 5 * Math.sin(angle - 0.55));
+      ctx.lineTo(point.x - 5 * Math.cos(angle + 0.55), point.y - 5 * Math.sin(angle + 0.55));
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
 function drawField() {
   const view = dimensions(fieldCanvas);
   const { ctx } = view;
   canvasBackground(view);
   if ($('show-contours').checked) contours(view);
+  if ($('show-lines').checked) fieldLines(view);
   if ($('show-vectors').checked) fieldVectors(view);
   field.charges.forEach((charge, index) => chargeSymbol(ctx, toScreen(charge, view), charge.q, `q${index + 1}`, index === field.selected));
   const probe = toScreen(field.probe, view);
@@ -207,6 +243,7 @@ function drawField() {
   const potential = electricPotentialAt(field.charges, field.probe);
   $('field-magnitude').textContent = e ? `${number(e.magnitude)} N/C` : '未定义';
   $('field-potential').textContent = potential === null ? '未定义' : `${number(potential)} V`;
+  $('line-density-value').textContent = `约 ${$('line-density').value} 条 / 5 nC`;
   const selected = field.charges[field.selected];
   $('selected-label').textContent = selected ? `选中电荷 q${field.selected + 1}` : '选中电荷';
   $('field-charge').value = selected ? String(Math.round(selected.q * 1e9)) : '0';
@@ -245,7 +282,9 @@ $('field-charge').addEventListener('input', (event) => { field.charges[field.sel
 $('remove-charge').addEventListener('click', () => { field.charges.splice(field.selected, 1); field.selected = Math.min(field.selected, field.charges.length - 1); drawField(); });
 $('field-reset').addEventListener('click', () => { field.charges = defaultCharges(); field.selected = 0; field.probe = { x: 0, y: 0.09 }; drawField(); });
 $('show-vectors').addEventListener('change', drawField);
+$('show-lines').addEventListener('change', drawField);
 $('show-contours').addEventListener('change', drawField);
+$('line-density').addEventListener('input', drawField);
 
 const capacitorCanvas = $('capacitor-canvas');
 function drawCapacitor() {

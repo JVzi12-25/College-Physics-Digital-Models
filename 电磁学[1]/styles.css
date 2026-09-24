@@ -21,3 +21,4 @@
 .github-watermark-label { font-size: 10px; font-weight: 800; letter-spacing: .25em; }
 .github-watermark-name { font-size: clamp(15px, 1.7vw, 23px); font-weight: 800; letter-spacing: .04em; line-height: 1.3; }
 @media (max-width: 640px) { .github-watermark { margin-left: auto; max-width: 48%; } .github-watermark-label { font-size: 8px; } .github-watermark-name { font-size: 12px; } }
+@media (min-width: 951px) { #field .canvas-card { display: flex; flex-direction: column; } #field .canvas-card canvas { flex: 1; min-height: 390px; aspect-ratio: auto; } }

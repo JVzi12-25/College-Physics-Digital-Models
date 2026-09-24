@@ -1,5 +1,5 @@
-export const K = 8.9875517923e9;
 export const EPSILON_0 = 8.8541878128e-12;
+const COULOMB_FACTOR = 1 / (4 * Math.PI * EPSILON_0);
 export const MIN_RADIUS = 0.01;
 export const ELEMENTARY_CHARGE = 1.602176634e-19;
 export const ELECTRON_MASS = 9.1093837139e-31;
@@ -10,8 +10,8 @@ export function coulombForceOnFirst(q1, q2, first, second) {
   const dy = first.y - second.y;
   const r = Math.hypot(dx, dy);
   if (r < MIN_RADIUS) return null;
-  const factor = K * q1 * q2 / (r ** 3);
-  return { x: factor * dx, y: factor * dy, magnitude: Math.abs(K * q1 * q2) / (r ** 2), distance: r };
+  const factor = COULOMB_FACTOR * q1 * q2 / (r ** 3);
+  return { x: factor * dx, y: factor * dy, magnitude: Math.abs(COULOMB_FACTOR * q1 * q2) / (r ** 2), distance: r };
 }
 
 export function electricFieldAt(charges, point) {
@@ -22,7 +22,7 @@ export function electricFieldAt(charges, point) {
     const dy = point.y - charge.y;
     const r = Math.hypot(dx, dy);
     if (r < MIN_RADIUS) return null;
-    const factor = K * charge.q / (r ** 3);
+    const factor = COULOMB_FACTOR * charge.q / (r ** 3);
     x += factor * dx;
     y += factor * dy;
   }
@@ -34,7 +34,7 @@ export function electricPotentialAt(charges, point) {
   for (const charge of charges) {
     const r = Math.hypot(point.x - charge.x, point.y - charge.y);
     if (r < MIN_RADIUS) return null;
-    value += K * charge.q / r;
+    value += COULOMB_FACTOR * charge.q / r;
   }
   return value;
 }
@@ -57,7 +57,7 @@ export function uniformChargedSphere({ totalCharge, sphereRadius, gaussianRadius
   return {
     enclosedCharge,
     flux: enclosedCharge / EPSILON_0,
-    field: gaussianRadius === 0 ? 0 : K * enclosedCharge / gaussianRadius ** 2,
+    field: gaussianRadius === 0 ? 0 : COULOMB_FACTOR * enclosedCharge / gaussianRadius ** 2,
   };
 }
 
