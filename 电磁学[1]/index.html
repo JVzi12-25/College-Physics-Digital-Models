@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d1726">
+  <title>电磁学 [1] · 电场与电路交互实验室</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="brand-mark" aria-hidden="true">ϵ</div>
+      <div class="brand-copy">
+        <span class="eyebrow">大学物理 · 交互模型</span>
+        <h1>电磁学 <span>[1]</span></h1>
+      </div>
+      <div class="header-note">六个模型 · 电场与电路基础</div>
+      <div class="github-watermark" aria-label="GitHub 用户名 JVzi12-25"><span class="github-watermark-label">GITHUB</span><span class="github-watermark-name">@JVzi12-25</span></div>
+    </header>
+
+    <main>
+      <div class="intro">
+        <div>
+          <p class="section-kicker">INTERACTIVE LAB / 01</p>
+          <h2>改变一个参数，<br><em>看见一条物理规律。</em></h2>
+          <p>从两个点电荷开始，逐步探索力、场、电势、粒子运动与电路暂态。拖动画布中的物体，或调整右侧参数，数据会实时更新。</p>
+        </div>
+        <div class="intro-number" aria-hidden="true">06<span>个交互模型</span></div>
+      </div>
+
+      <nav class="model-nav" aria-label="选择模型">
+        <button class="nav-tab is-active" type="button" data-target="coulomb" aria-current="page"><span>01</span> 库仑力</button>
+        <button class="nav-tab" type="button" data-target="field"><span>02</span> 电场与电势</button>
+        <button class="nav-tab" type="button" data-target="capacitor"><span>03</span> 平行板电容器</button>
+        <button class="nav-tab" type="button" data-target="gauss"><span>04</span> 高斯定律</button>
+        <button class="nav-tab" type="button" data-target="particle"><span>05</span> 带电粒子运动</button>
+        <button class="nav-tab" type="button" data-target="rc"><span>06</span> RC 充放电</button>
+      </nav>
+
+      <section class="model-panel is-active" id="coulomb" aria-labelledby="coulomb-title">
+        <div class="model-heading">
+          <div><p class="section-kicker">MODEL 01 / ELECTRIC FORCE</p><h3 id="coulomb-title">两个点电荷如何相互作用？</h3><p>拖动电荷改变相对位置；改变电荷量，观察力的大小和方向。</p></div>
+          <div class="formula">F = k |q₁q₂| / r²</div>
+        </div>
+        <div class="workspace">
+          <div class="canvas-card">
+            <div class="canvas-topline"><span class="live-dot"></span> 实时模拟 <span class="canvas-hint">拖动圆形电荷</span></div>
+            <canvas id="coulomb-canvas" aria-label="两个可拖动点电荷及其库仑力示意图"></canvas>
+            <div class="canvas-footer"><span><i class="legend-positive"></i> 正电荷</span><span><i class="legend-negative"></i> 负电荷</span><span>网格间隔 5 cm</span></div>
+          </div>
+          <aside class="control-card" aria-label="库仑力参数">
+            <h4>实验参数</h4>
+            <label class="range-control" for="q1"><span>电荷 q₁</span><output id="q1-value">+5 nC</output><input id="q1" type="range" min="-10" max="10" step="1" value="5"></label>
+            <label class="range-control" for="q2"><span>电荷 q₂</span><output id="q2-value">−5 nC</output><input id="q2" type="range" min="-10" max="10" step="1" value="-5"></label>
+            <button class="secondary-button" id="coulomb-reset" type="button">恢复初始位置</button>
+            <div class="readout"><span>电荷间距 r</span><strong id="coulomb-distance">—</strong></div>
+            <div class="readout emph"><span>库仑力 |F|</span><strong id="coulomb-force">—</strong></div>
+            <p class="interpretation" id="coulomb-direction">—</p>
+          </aside>
+        </div>
+        <p class="model-note"><strong>模型条件</strong> 真空中静止的点电荷；两电荷距离小于 1 cm 时，力值不显示。</p>
+      </section>
+
+      <section class="model-panel" id="field" aria-labelledby="field-title" hidden>
+        <div class="model-heading">
+          <div><p class="section-kicker">MODEL 02 / FIELD & POTENTIAL</p><h3 id="field-title">电荷如何改变周围的空间？</h3><p>拖动电荷或白色探针，比较电场方向与等势线的关系。</p></div>
+          <div class="formula">E = Σ kqᵢ Δrᵢ / |Δrᵢ|³</div>
+        </div>
+        <div class="workspace">
+          <div class="canvas-card">
+            <div class="canvas-topline"><span class="live-dot"></span> 实时模拟 <span class="canvas-hint">点击电荷可选中；拖动白色探针</span></div>
+            <canvas id="field-canvas" aria-label="可拖动点电荷、电场矢量、等势线与探针"></canvas>
+            <div class="canvas-footer"><span><i class="legend-field"></i> 电场矢量</span><span><i class="legend-potential"></i> 等势线</span><span><i class="legend-probe"></i> 探针</span></div>
+          </div>
+          <aside class="control-card" aria-label="电场参数">
+            <h4>实验参数</h4>
+            <div class="button-row"><button class="action-button positive" id="add-positive" type="button">＋ 正电荷</button><button class="action-button negative" id="add-negative" type="button">− 负电荷</button></div>
+            <label class="range-control" for="field-charge"><span id="selected-label">选中电荷</span><output id="field-charge-value">+5 nC</output><input id="field-charge" type="range" min="-10" max="10" step="1" value="5"></label>
+            <div class="button-row"><button class="secondary-button" id="remove-charge" type="button">删除选中</button><button class="secondary-button" id="field-reset" type="button">重置</button></div>
+            <label class="check-control"><input id="show-vectors" type="checkbox" checked> 显示电场矢量</label>
+            <label class="check-control"><input id="show-contours" type="checkbox" checked> 显示等势线</label>
+            <div class="readout"><span>探针处 |E|</span><strong id="field-magnitude">—</strong></div>
+            <div class="readout emph"><span>探针处电势 V</span><strong id="field-potential">—</strong></div>
+            <p class="interpretation" id="field-description">电场方向为正试探电荷所受力的方向。</p>
+          </aside>
+        </div>
+        <p class="model-note"><strong>模型条件</strong> 真空中的点电荷叠加；电势以无穷远处为零。等势线是数值近似，探针距电荷小于 1 cm 时读数不显示。</p>
+      </section>
+
+      <section class="model-panel" id="capacitor" aria-labelledby="capacitor-title" hidden>
+        <div class="model-heading">
+          <div><p class="section-kicker">MODEL 03 / CAPACITANCE</p><h3 id="capacitor-title">什么决定电容器储存电荷的能力？</h3><p>调整结构与电压，观察电容、电场、电荷量和储能如何变化。</p></div>
+          <div class="formula">C = ε₀εᵣA / d</div>
+        </div>
+        <div class="workspace">
+          <div class="canvas-card">
+            <div class="canvas-topline"><span class="live-dot"></span> 理想平行板模型 <span class="canvas-hint">示意图按参数变化</span></div>
+            <canvas id="capacitor-canvas" aria-label="平行板电容器及板间均匀电场示意图"></canvas>
+            <div class="canvas-footer"><span><i class="legend-positive"></i> 正极板</span><span><i class="legend-negative"></i> 负极板</span><span><i class="legend-field"></i> 电场方向</span></div>
+          </div>
+          <aside class="control-card" aria-label="电容器参数">
+            <h4>实验参数</h4>
+            <label class="range-control" for="voltage"><span>电压 U</span><output id="voltage-value">100 V</output><input id="voltage" type="range" min="0" max="500" step="10" value="100"></label>
+            <label class="range-control" for="distance"><span>板间距 d</span><output id="distance-value">3.0 cm</output><input id="distance" type="range" min="1" max="10" step="0.5" value="3"></label>
+            <label class="range-control" for="area"><span>极板面积 A</span><output id="area-value">400 cm²</output><input id="area" type="range" min="100" max="1000" step="50" value="400"></label>
+            <label class="range-control" for="permittivity"><span>相对介电常数 εᵣ</span><output id="permittivity-value">1.0</output><input id="permittivity" type="range" min="1" max="10" step="0.5" value="1"></label>
+            <div class="readout"><span>电容 C</span><strong id="capacitance">—</strong></div>
+            <div class="readout"><span>带电量 |Q|</span><strong id="capacitor-charge">—</strong></div>
+            <div class="readout"><span>板间电场 E</span><strong id="capacitor-field">—</strong></div>
+            <div class="readout emph"><span>储能 W</span><strong id="capacitor-energy">—</strong></div>
+          </aside>
+        </div>
+        <p class="model-note"><strong>模型条件</strong> 极板足够大，电介质均匀填满板间；忽略边缘效应、漏电和击穿。图中极板面积以高度示意，并非真实三维比例。</p>
+      </section>
+
+      <section class="model-panel" id="gauss" aria-labelledby="gauss-title" hidden>
+        <div class="model-heading">
+          <div><p class="section-kicker">MODEL 04 / GAUSS'S LAW</p><h3 id="gauss-title">高斯定律如何利用对称性？</h3><p>切换球体、圆柱面和平面，改变电荷分布与高斯面的尺寸，比较电场和电通量。</p></div>
+          <div class="formula">Φ = Q<sub>内</sub> / ε₀</div>
+        </div>
+        <div class="geometry-nav" role="group" aria-label="选择高斯定律几何模型">
+          <button class="geometry-tab is-active" type="button" data-gauss-target="gauss-sphere" aria-controls="gauss-sphere" aria-pressed="true">均匀带电球体</button>
+          <button class="geometry-tab" type="button" data-gauss-target="gauss-cylinder" aria-controls="gauss-cylinder" aria-pressed="false">无限长带电圆柱面</button>
+          <button class="geometry-tab" type="button" data-gauss-target="gauss-plane" aria-controls="gauss-plane" aria-pressed="false">无限大带电平面</button>
+        </div>
+        <div class="gauss-geometry is-active" id="gauss-sphere">
+        <div class="workspace">
+          <div class="canvas-card">
+            <div class="canvas-topline"><span class="live-dot"></span> 球体截面示意 <span class="canvas-hint">虚线表示同心高斯球面</span></div>
+            <canvas id="gauss-canvas" aria-label="均匀带电球体及同心高斯面的截面示意图"></canvas>
+            <div class="canvas-footer"><span><i class="legend-positive"></i> 带电球体</span><span><i class="legend-potential"></i> 高斯球面</span><span><i class="legend-field"></i> 表面电场</span></div>
+          </div>
+          <aside class="control-card" aria-label="高斯定律参数">
+            <h4>实验参数</h4>
+            <label class="range-control" for="gauss-charge"><span>球体总电荷 Q</span><output id="gauss-charge-value">+5 nC</output><input id="gauss-charge" type="range" min="-10" max="10" step="1" value="5"></label>
+            <label class="range-control" for="sphere-radius"><span>带电球半径 R</span><output id="sphere-radius-value">6.0 cm</output><input id="sphere-radius" type="range" min="3" max="10" step="0.5" value="6"></label>
+            <label class="range-control" for="gaussian-radius"><span>高斯面半径 r</span><output id="gaussian-radius-value">9.0 cm</output><input id="gaussian-radius" type="range" min="1" max="15" step="0.5" value="9"></label>
+            <div class="readout"><span>包围电荷 Q<sub>内</sub></span><strong id="gauss-enclosed">—</strong></div>
+            <div class="readout"><span>高斯面电场 |E|</span><strong id="gauss-field">—</strong></div>
+            <div class="readout emph"><span>电通量 Φ</span><strong id="gauss-flux">—</strong></div>
+            <p class="interpretation" id="gauss-description">—</p>
+          </aside>
+        </div>
+        <p class="model-note"><strong>模型条件</strong> 实心球体内的电荷按体积均匀分布，体系保持球对称；画布是三维球体和球面的二维截面。电场方向随电荷符号改变，通量带正负号。</p>
+        </div>
+        <div class="gauss-geometry" id="gauss-cylinder" hidden>
+          <p class="geometry-formula">圆柱面内 E = 0；圆柱面外 E(r) = σR / (ε₀r)，高斯柱侧面的电通量 Φ = E · 2πrL。</p>
+          <div class="workspace">
+            <div class="cylinder-views">
+              <div class="canvas-card">
+                <div class="canvas-topline"><span class="live-dot"></span> 圆柱横截面 <span class="canvas-hint">沿轴向看</span></div>
+                <canvas id="cylinder-canvas" aria-label="无限长均匀带电圆柱面和同轴高斯圆柱面的横截面示意图"></canvas>
+                <div class="canvas-footer"><span><i class="legend-positive"></i> 带电圆柱面</span><span><i class="legend-potential"></i> 高斯圆柱面</span><span><i class="legend-field"></i> 径向电场</span></div>
+              </div>
+              <div class="canvas-card">
+                <div class="canvas-topline"><span class="live-dot"></span> 圆柱轴向侧视图 <span class="canvas-hint">沿径向看</span></div>
+                <canvas id="cylinder-side-canvas" aria-label="无限长带电圆柱面及长度为 L 的同轴高斯柱侧视图，虚线表示高斯柱侧面和端盖"></canvas>
+                <div class="canvas-footer"><span><i class="legend-positive"></i> 无限长带电面</span><span><i class="legend-potential"></i> 长度 L 的高斯柱</span></div>
+              </div>
+            </div>
+            <aside class="control-card" aria-label="带电圆柱面参数">
+              <h4>实验参数</h4>
+              <label class="range-control" for="cylinder-sigma"><span>面电荷密度 σ</span><output id="cylinder-sigma-value">+5 nC/m²</output><input id="cylinder-sigma" type="range" min="-10" max="10" step="1" value="5"></label>
+              <label class="range-control" for="cylinder-radius"><span>圆柱半径 R</span><output id="cylinder-radius-value">4.0 cm</output><input id="cylinder-radius" type="range" min="2" max="8" step="0.5" value="4"></label>
+              <label class="range-control" for="cylinder-gaussian-radius"><span>高斯面半径 r</span><output id="cylinder-gaussian-radius-value">6.0 cm</output><input id="cylinder-gaussian-radius" type="range" min="1" max="12" step="0.5" value="6"></label>
+              <label class="range-control" for="cylinder-length"><span>高斯柱长度 L</span><output id="cylinder-length-value">20 cm</output><input id="cylinder-length" type="range" min="5" max="30" step="1" value="20"></label>
+              <div class="readout"><span>包围电荷 Q<sub>内</sub></span><strong id="cylinder-enclosed">—</strong></div>
+              <div class="readout"><span>高斯侧面电场 |E|</span><strong id="cylinder-field">—</strong></div>
+              <div class="readout emph"><span>总电通量 Φ</span><strong id="cylinder-flux">—</strong></div>
+              <p class="interpretation" id="cylinder-description">—</p>
+            </aside>
+          </div>
+          <p class="model-note"><strong>模型条件</strong> 无限长、表面均匀带电的理想薄圆柱壳；横截面与侧视图同步显示长度为 L 的同轴高斯柱，端盖电通量为零。r = R 时理想面电荷的电场有跳变，读数标记为未定义。</p>
+        </div>
+        <div class="gauss-geometry" id="gauss-plane" hidden>
+          <p class="geometry-formula">孤立无限大平面两侧 |E| = |σ| / (2ε₀)；高斯柱盒两端盖的有符号总电通量 Φ = σA / ε₀。</p>
+          <div class="workspace">
+            <div class="canvas-card">
+              <div class="canvas-topline"><span class="live-dot"></span> 平面侧视示意 <span class="canvas-hint">虚线：跨越平面的高斯柱盒</span></div>
+              <canvas id="plane-canvas" aria-label="无限大均匀带电平面和穿过平面的高斯柱盒侧视示意图"></canvas>
+              <div class="canvas-footer"><span><i class="legend-positive"></i> 带电平面</span><span><i class="legend-potential"></i> 高斯柱盒</span><span><i class="legend-field"></i> 两侧电场</span></div>
+            </div>
+            <aside class="control-card" aria-label="带电平面参数">
+              <h4>实验参数</h4>
+              <label class="range-control" for="plane-sigma"><span>面电荷密度 σ</span><output id="plane-sigma-value">+6 nC/m²</output><input id="plane-sigma" type="range" min="-20" max="20" step="1" value="6"></label>
+              <label class="range-control" for="plane-area"><span>端盖面积 A</span><output id="plane-area-value">400 cm²</output><input id="plane-area" type="range" min="100" max="1000" step="50" value="400"></label>
+              <label class="range-control" for="plane-half-height"><span>柱盒半高 h</span><output id="plane-half-height-value">4.0 cm</output><input id="plane-half-height" type="range" min="1" max="10" step="0.5" value="4"></label>
+              <div class="readout"><span>平面两侧场强 |E|</span><strong id="plane-field">—</strong></div>
+              <div class="readout"><span>包围电荷 Q<sub>内</sub></span><strong id="plane-enclosed">—</strong></div>
+              <div class="readout"><span>上 / 下侧场方向</span><strong id="plane-direction">—</strong></div>
+              <div class="readout emph"><span>总电通量 Φ</span><strong id="plane-flux">—</strong></div>
+              <p class="interpretation" id="plane-description">—</p>
+            </aside>
+          </div>
+          <p class="model-note"><strong>模型条件</strong> 孤立、无限大、均匀带电的理想平面；忽略边缘效应。平面自身位置的电场不定义，图中展示平面两侧的场。柱盒高度不改变场强或所包围的电荷。</p>
+        </div>
+      </section>
+
+      <section class="model-panel" id="particle" aria-labelledby="particle-title" hidden>
+        <div class="model-heading">
+          <div><p class="section-kicker">MODEL 05 / CHARGED PARTICLE</p><h3 id="particle-title">粒子穿过电场时会怎样偏转？</h3><p>从两板中线水平射入电子或质子，调整电压、板间距和初速度，观察轨迹与撞板条件。</p></div>
+          <div class="formula">y = qEt² / 2m</div>
+        </div>
+        <div class="workspace">
+          <div class="canvas-card">
+            <div class="canvas-topline"><span class="live-dot"></span> 匀强电场轨迹 <span class="canvas-hint">上正下负；粒子从左侧射入</span></div>
+            <canvas id="particle-canvas" aria-label="带电粒子在平行板之间的运动轨迹"></canvas>
+            <div class="canvas-footer"><span><i class="legend-positive"></i> 正极板</span><span><i class="legend-negative"></i> 负极板</span><span><i class="legend-field"></i> 电场方向</span></div>
+          </div>
+          <aside class="control-card" aria-label="带电粒子参数">
+            <h4>实验参数</h4>
+            <label class="select-control" for="particle-type"><span>粒子类型</span><select id="particle-type"><option value="electron">电子（−e）</option><option value="proton">质子（+e）</option></select></label>
+            <label class="range-control" for="particle-voltage"><span>极板电压 U</span><output id="particle-voltage-value">30 V</output><input id="particle-voltage" type="range" min="0" max="300" step="10" value="30"></label>
+            <label class="range-control" for="particle-gap"><span>板间距 d</span><output id="particle-gap-value">4.0 cm</output><input id="particle-gap" type="range" min="2" max="8" step="0.5" value="4"></label>
+            <label class="range-control" for="particle-speed"><span>水平初速度 v₀</span><output id="particle-speed-value">10 × 10⁶ m/s</output><input id="particle-speed" type="range" min="5" max="20" step="1" value="10"></label>
+            <button class="secondary-button" id="particle-play" type="button">播放粒子运动</button>
+            <div class="readout"><span>板间电场 |E|</span><strong id="particle-field">—</strong></div>
+            <div class="readout"><span>运动时间</span><strong id="particle-time">—</strong></div>
+            <div class="readout emph"><span>末端偏移 |y|</span><strong id="particle-deflection">—</strong></div>
+            <p class="interpretation" id="particle-outcome">—</p>
+          </aside>
+        </div>
+        <p class="model-note"><strong>模型条件</strong> 板长固定为 12 cm；粒子从中线水平射入，忽略重力、边缘场、粒子间作用和相对论效应。轨迹到达极板后停止。</p>
+      </section>
+
+      <section class="model-panel" id="rc" aria-labelledby="rc-title" hidden>
+        <div class="model-heading">
+          <div><p class="section-kicker">MODEL 06 / RC TRANSIENT</p><h3 id="rc-title">电压和电流怎样随时间变化？</h3><p>切换充电与放电，调整电阻、电容及观察时刻，比较电压、电荷和电流的变化。</p></div>
+          <div class="formula">τ = RC</div>
+        </div>
+        <div class="workspace">
+          <div class="canvas-card">
+            <div class="canvas-topline"><span class="live-dot"></span> RC 暂态曲线 <span class="canvas-hint">实线：电容电压；虚线：电流大小</span></div>
+            <canvas id="rc-canvas" aria-label="RC 电路电容电压和电流随时间变化曲线"></canvas>
+            <div class="canvas-footer"><span><i class="legend-positive"></i> 电容电压</span><span><i class="legend-field"></i> 电流大小</span><span>横轴：时间 0–10 s</span></div>
+          </div>
+          <aside class="control-card" aria-label="RC 电路参数">
+            <h4>实验参数</h4>
+            <label class="select-control" for="rc-mode"><span>过程</span><select id="rc-mode"><option value="charge">充电</option><option value="discharge">放电</option></select></label>
+            <label class="range-control" for="rc-voltage"><span>电源 / 初始电压 U₀</span><output id="rc-voltage-value">10 V</output><input id="rc-voltage" type="range" min="1" max="24" step="1" value="10"></label>
+            <label class="range-control" for="rc-resistance"><span>电阻 R</span><output id="rc-resistance-value">20 kΩ</output><input id="rc-resistance" type="range" min="1" max="100" step="1" value="20"></label>
+            <label class="range-control" for="rc-capacitance"><span>电容 C</span><output id="rc-capacitance-value">50 µF</output><input id="rc-capacitance" type="range" min="1" max="100" step="1" value="50"></label>
+            <label class="range-control" for="rc-time"><span>观察时刻 t</span><output id="rc-time-value">1.0 s</output><input id="rc-time" type="range" min="0" max="10" step="0.1" value="1"></label>
+            <div class="readout"><span>时间常数 τ</span><strong id="rc-tau">—</strong></div>
+            <div class="readout"><span>电容电压 U<sub>C</sub></span><strong id="rc-capacitor-voltage">—</strong></div>
+            <div class="readout"><span>电容电荷 Q</span><strong id="rc-charge">—</strong></div>
+            <div class="readout emph"><span>电流 I</span><strong id="rc-current">—</strong></div>
+          </aside>
+        </div>
+        <p class="model-note"><strong>模型条件</strong> 理想直流电源、电阻和电容；放电时电容初始电压为 U₀。电流以充电方向为正，因此放电电流为负。忽略导线电阻与漏电。</p>
+      </section>
+    </main>
+    <footer class="site-footer"><span>COLLEGE PHYSICS DIGITAL MODELS</span><span>电磁学 [1] · 电场与电路基础</span></footer>
+  </div>
+</body>
+</html>
