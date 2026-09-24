@@ -1,0 +1,16 @@
+# Local credentials and machine-specific files
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+*.key
+*.token
+credentials.json
+secrets.json
+
+# Generated dependencies and OS files
+node_modules/
+.DS_Store
+Thumbs.db
