@@ -12,7 +12,7 @@
 运行：
 
 ```powershell
-cd '电磁学[1]'
+cd electromagnetism-1
 npm start
 ```
 
