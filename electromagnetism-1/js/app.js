@@ -655,14 +655,70 @@ for (const id of ['rc-voltage', 'rc-resistance', 'rc-capacitance', 'rc-time']) $
 $('rc-mode').addEventListener('change', drawRc);
 
 const redraw = { coulomb: drawCoulomb, field: drawField, capacitor: drawCapacitor, gauss: drawActiveGauss, particle: drawParticle, rc: drawRc };
-document.querySelectorAll('.nav-tab').forEach((tab) => tab.addEventListener('click', () => {
+const modelNav = document.querySelector('.model-nav');
+const modelTabs = [...modelNav.querySelectorAll('.nav-tab')];
+const modelPanels = [...document.querySelectorAll('.model-panel')];
+
+function selectModel(tab) {
   const target = tab.dataset.target;
+  if (tab.classList.contains('is-active')) return;
   stopParticleAnimation();
-  document.querySelectorAll('.nav-tab').forEach((item) => { item.classList.toggle('is-active', item === tab); item.removeAttribute('aria-current'); });
+  modelTabs.forEach((item) => { item.classList.toggle('is-active', item === tab); item.removeAttribute('aria-current'); });
   tab.setAttribute('aria-current', 'page');
-  document.querySelectorAll('.model-panel').forEach((panel) => { panel.hidden = panel.id !== target; panel.classList.toggle('is-active', panel.id === target); });
+  modelPanels.forEach((panel) => { panel.hidden = panel.id !== target; panel.classList.toggle('is-active', panel.id === target); });
+  const navRect = modelNav.getBoundingClientRect();
+  const tabRect = tab.getBoundingClientRect();
+  modelNav.scrollTo({ left: modelNav.scrollLeft + tabRect.left - navRect.left - (modelNav.clientWidth - tabRect.width) / 2, behavior: 'smooth' });
   redraw[target]();
-}));
+}
+
+modelTabs.forEach((tab) => tab.addEventListener('click', () => selectModel(tab)));
+
+let navDrag = null;
+let suppressNavClick = false;
+modelNav.addEventListener('pointerdown', (event) => {
+  if (event.pointerType !== 'mouse' || event.button !== 0) return;
+  navDrag = { x: event.clientX, scrollLeft: modelNav.scrollLeft };
+  suppressNavClick = false;
+});
+modelNav.addEventListener('pointermove', (event) => {
+  if (!navDrag) return;
+  const distance = event.clientX - navDrag.x;
+  if (Math.abs(distance) > 5) {
+    suppressNavClick = true;
+    modelNav.classList.add('is-dragging');
+  }
+  if (suppressNavClick) modelNav.scrollLeft = navDrag.scrollLeft - distance;
+});
+for (const type of ['pointerup', 'pointercancel', 'pointerleave']) {
+  modelNav.addEventListener(type, () => { navDrag = null; modelNav.classList.remove('is-dragging'); });
+}
+modelNav.addEventListener('click', (event) => {
+  if (!suppressNavClick) return;
+  event.preventDefault();
+  event.stopPropagation();
+  suppressNavClick = false;
+}, true);
+
+let panelTouch = null;
+modelPanels.forEach((panel) => {
+  panel.addEventListener('touchstart', (event) => {
+    panelTouch = null;
+    if (event.touches.length !== 1 || event.target.closest('button, input, select, textarea, a, canvas, .geometry-nav')) return;
+    panelTouch = { panel, x: event.touches[0].clientX, y: event.touches[0].clientY };
+  }, { passive: true });
+  panel.addEventListener('touchend', (event) => {
+    if (!panelTouch || panelTouch.panel !== panel || event.changedTouches.length !== 1) return;
+    const dx = event.changedTouches[0].clientX - panelTouch.x;
+    const dy = event.changedTouches[0].clientY - panelTouch.y;
+    panelTouch = null;
+    if (Math.abs(dx) < 65 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+    const index = modelTabs.findIndex((tab) => tab.classList.contains('is-active'));
+    const next = modelTabs[index + (dx < 0 ? 1 : -1)];
+    if (next) selectModel(next);
+  }, { passive: true });
+  panel.addEventListener('touchcancel', () => { panelTouch = null; }, { passive: true });
+});
 const resizeObserver = new ResizeObserver(() => { const active = document.querySelector('.model-panel.is-active'); if (active) redraw[active.id](); });
 document.querySelectorAll('.canvas-card').forEach((card) => resizeObserver.observe(card));
 drawCoulomb();
