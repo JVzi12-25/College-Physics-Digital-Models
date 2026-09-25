@@ -57,7 +57,8 @@ body { margin: 0; background: radial-gradient(circle at 87% 5%, #183348 0, trans
   background: linear-gradient(to bottom, rgba(255, 255, 255, .055), transparent);
 }
 .model-nav-meta { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 3px 6px 10px; }
-.model-nav-meta strong { color: #e7f8f2; font-size: 12px; letter-spacing: .1em; }
+.model-nav-meta strong { display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px; border: 1px solid rgba(125, 231, 202, .32); border-radius: 999px; background: rgba(125, 231, 202, .10); color: #baf5df; font-size: 12px; letter-spacing: .04em; }
+.model-nav-meta strong::before { content: "↓"; color: #7ce4c4; font-size: 15px; line-height: 1; }
 .model-nav-meta span { color: #a9c5c8; font-size: 11px; }
 .model-nav-row { position: relative; display: grid; grid-template-columns: 42px minmax(0, 1fr) 42px; align-items: stretch; gap: 8px; min-width: 0; }
 .model-nav-shell .model-nav { min-width: 0; width: 100%; margin: 0; padding: 2px; border: 0; user-select: none; }
