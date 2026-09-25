@@ -432,6 +432,7 @@ $('particle-speed').addEventListener('input', (event) => { particle.speed = Numb
 $('particle-angle').addEventListener('input', (event) => { particle.angleDeg = Number(event.target.value); drawParticle(); });
 
 const tabs = [...document.querySelectorAll('.model-nav .nav-tab')];
+const modelNav = document.querySelector('.model-nav');
 const panels = [...document.querySelectorAll('.model-panel')];
 const advancedModels = initAdvancedModels();
 function selectModel(tab) {
@@ -442,6 +443,9 @@ function selectModel(tab) {
   tabs.forEach((item) => { item.classList.toggle('is-active', item === tab); item.removeAttribute('aria-current'); });
   tab.setAttribute('aria-current', 'page');
   panels.forEach((panel) => { panel.hidden = panel.id !== target; panel.classList.toggle('is-active', panel.id === target); });
+  const navRect = modelNav.getBoundingClientRect();
+  const tabRect = tab.getBoundingClientRect();
+  modelNav.scrollTo({ left: modelNav.scrollLeft + tabRect.left - navRect.left - (modelNav.clientWidth - tabRect.width) / 2, behavior: 'smooth' });
   if (target === 'current-field') drawMagnetic();
   else if (target === 'charged-particle') drawParticle();
   else advancedModels.draw(target);

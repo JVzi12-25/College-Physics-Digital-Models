@@ -7,6 +7,7 @@
   <title>电磁学 [2] · 大学物理交互模型</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="../site.css">
+  <script defer src="../model-nav.js"></script>
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
@@ -37,15 +38,22 @@
         <div class="intro-number" aria-hidden="true">07<span>个交互模型</span></div>
       </div>
 
-      <nav class="model-nav" aria-label="选择模型">
-        <button class="nav-tab is-active" type="button" data-target="current-field" aria-current="page"><span>01</span> 电流的磁场</button>
-        <button class="nav-tab" type="button" data-target="charged-particle"><span>02</span> 磁场中的运动电荷</button>
-        <button class="nav-tab" type="button" data-target="magnetic-medium"><span>03</span> 磁介质与磁滞</button>
-        <button class="nav-tab" type="button" data-target="induction"><span>04</span> 磁通量与感应</button>
-        <button class="nav-tab" type="button" data-target="motional-emf"><span>05</span> 导体棒切割磁感线</button>
-        <button class="nav-tab" type="button" data-target="rlc-oscillation"><span>06</span> LC / RLC 振荡</button>
-        <button class="nav-tab" type="button" data-target="em-wave"><span>07</span> 真空电磁波</button>
-      </nav>
+      <div class="model-nav-shell">
+        <div class="model-nav-meta"><strong>选择模型</strong><span>按住拖动 · 左右滑动</span></div>
+        <div class="model-nav-row">
+          <button class="model-nav-arrow" type="button" data-nav-step="-1" aria-label="向左浏览模型" aria-controls="model-nav">‹</button>
+          <nav class="model-nav" id="model-nav" aria-label="选择模型，可左右拖动浏览">
+            <button class="nav-tab is-active" type="button" data-target="current-field" aria-current="page"><span>01</span> 电流的磁场</button>
+            <button class="nav-tab" type="button" data-target="charged-particle"><span>02</span> 磁场中的运动电荷</button>
+            <button class="nav-tab" type="button" data-target="magnetic-medium"><span>03</span> 磁介质与磁滞</button>
+            <button class="nav-tab" type="button" data-target="induction"><span>04</span> 磁通量与感应</button>
+            <button class="nav-tab" type="button" data-target="motional-emf"><span>05</span> 导体棒切割磁感线</button>
+            <button class="nav-tab" type="button" data-target="rlc-oscillation"><span>06</span> LC / RLC 振荡</button>
+            <button class="nav-tab" type="button" data-target="em-wave"><span>07</span> 真空电磁波</button>
+          </nav>
+          <button class="model-nav-arrow" type="button" data-nav-step="1" aria-label="向右浏览模型" aria-controls="model-nav">›</button>
+        </div>
+      </div>
 
       <section class="model-panel is-active" id="current-field" aria-labelledby="current-field-title">
         <div class="model-heading">

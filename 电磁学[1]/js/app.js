@@ -713,32 +713,6 @@ function selectModel(tab) {
 
 modelTabs.forEach((tab) => tab.addEventListener('click', () => selectModel(tab)));
 
-let navDrag = null;
-let suppressNavClick = false;
-modelNav.addEventListener('pointerdown', (event) => {
-  if (event.pointerType !== 'mouse' || event.button !== 0) return;
-  navDrag = { x: event.clientX, scrollLeft: modelNav.scrollLeft };
-  suppressNavClick = false;
-});
-modelNav.addEventListener('pointermove', (event) => {
-  if (!navDrag) return;
-  const distance = event.clientX - navDrag.x;
-  if (Math.abs(distance) > 5) {
-    suppressNavClick = true;
-    modelNav.classList.add('is-dragging');
-  }
-  if (suppressNavClick) modelNav.scrollLeft = navDrag.scrollLeft - distance;
-});
-for (const type of ['pointerup', 'pointercancel', 'pointerleave']) {
-  modelNav.addEventListener(type, () => { navDrag = null; modelNav.classList.remove('is-dragging'); });
-}
-modelNav.addEventListener('click', (event) => {
-  if (!suppressNavClick) return;
-  event.preventDefault();
-  event.stopPropagation();
-  suppressNavClick = false;
-}, true);
-
 let panelTouch = null;
 modelPanels.forEach((panel) => {
   panel.addEventListener('touchstart', (event) => {
