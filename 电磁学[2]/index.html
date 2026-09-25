@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d1726">
+  <title>电磁学 [2] · 大学物理交互模型</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../site.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <details class="project-switcher">
+        <summary class="brand-mark" aria-label="切换项目页面" title="切换项目页面">ϵ</summary>
+        <nav class="project-menu" aria-label="项目页面">
+          <span class="project-menu-heading">选择项目包</span>
+          <a href="../电磁学[1]/index.html"><span>01</span> 电磁学 [1]<small>已有模型</small></a>
+          <a href="../电磁学[2]/index.html" aria-label="电磁学 [2]，当前页面" aria-current="page"><span>02</span> 电磁学 [2]<small>当前页面</small></a>
+          <a href="../光学/index.html"><span>03</span> 光学<small>待建设</small></a>
+          <a href="../近代物理学/index.html"><span>04</span> 近代物理学<small>待建设</small></a>
+        </nav>
+      </details>
+      <div class="brand-copy"><span class="eyebrow">大学物理 · 交互模型</span><h1>电磁学 <span>[2]</span></h1></div>
+      <div class="header-note">磁介质 · 感应 · 电磁振荡与波</div>
+      <div class="github-watermark" aria-label="GitHub 用户名 JVzi12-25"><span class="github-watermark-label">GITHUB</span><span class="github-watermark-name">@JVzi12-25</span></div>
+    </header>
+
+    <main>
+      <div class="intro">
+        <div>
+          <p class="section-kicker">INTERACTIVE LAB / 02</p>
+          <h2>从磁场到电磁波，<br><em>把变化过程看清楚。</em></h2>
+          <p>从稳恒电流产生的磁场出发，逐步探索磁介质、感应现象、电路振荡，以及真空中的电磁波。</p>
+        </div>
+        <div class="intro-number" aria-hidden="true">07<span>个交互模型</span></div>
+      </div>
+
+      <nav class="model-nav" aria-label="选择模型">
+        <button class="nav-tab is-active" type="button" data-target="current-field" aria-current="page"><span>01</span> 电流的磁场</button>
+        <button class="nav-tab" type="button" data-target="charged-particle"><span>02</span> 磁场中的运动电荷</button>
+        <button class="nav-tab" type="button" data-target="magnetic-medium"><span>03</span> 磁介质与磁滞</button>
+        <button class="nav-tab" type="button" data-target="induction"><span>04</span> 磁通量与感应</button>
+        <button class="nav-tab" type="button" data-target="motional-emf"><span>05</span> 导体棒切割磁感线</button>
+        <button class="nav-tab" type="button" data-target="rlc-oscillation"><span>06</span> LC / RLC 振荡</button>
+        <button class="nav-tab" type="button" data-target="em-wave"><span>07</span> 真空电磁波</button>
+      </nav>
+
+      <section class="model-panel is-active" id="current-field" aria-labelledby="current-field-title">
+        <div class="model-heading">
+          <div><p class="section-kicker">MODEL 01 / MAGNETIC FIELD OF CURRENT</p><h3 id="current-field-title">电流如何产生磁场？</h3><p>切换导体几何，调节电流并拖动探针；场线方向遵循右手定则。</p></div>
+          <div class="formula formula-stack"><span>B<sub>直线</sub> = μ₀I / 2πr</span><span>B<sub>圆环轴线</sub> = μ₀IR² / 2(R² + x²)<sup>3/2</sup></span><span>B<sub>螺线管</sub> = μ₀nI</span></div>
+        </div>
+        <div class="workspace">
+          <div class="canvas-card">
+            <div class="canvas-topline"><span class="live-dot"></span><span id="magnetic-scene-title">无限长直导线 · 横截面</span><span class="canvas-hint" id="magnetic-hint">拖动白色探针</span></div>
+            <canvas id="magnetic-canvas" aria-label="载流导体周围的磁场线和可拖动磁场探针"></canvas>
+            <div class="canvas-footer"><span><i class="legend-field"></i> 磁场方向与磁感线</span><span><i class="legend-probe"></i> 磁场探针</span><span>场线示意；探针按所选理想模型计算</span></div>
+          </div>
+          <aside class="control-card" aria-label="电流磁场参数">
+            <h4>实验参数</h4>
+            <label class="select-control" for="source-geometry"><span>载流导体</span><select id="source-geometry"><option value="wire">无限长直导线</option><option value="loop">圆形电流环</option><option value="solenoid">理想长螺线管</option></select></label>
+            <label class="range-control" for="current"><span>电流 I</span><output id="current-value">+5.0 A</output><input id="current" type="range" min="-10" max="10" step="0.5" value="5"></label>
+            <label class="range-control geometry-control" id="radius-control" for="loop-radius"><span>电流环半径 R</span><output id="loop-radius-value">10.0 cm</output><input id="loop-radius" type="range" min="5" max="20" step="0.5" value="10"></label>
+            <label class="range-control geometry-control" id="turns-control" for="turn-density" hidden><span>匝密度 n</span><output id="turn-density-value">800 匝/m</output><input id="turn-density" type="range" min="200" max="2000" step="50" value="800"></label>
+            <button class="secondary-button" id="magnetic-reset" type="button">恢复探针位置</button>
+            <div class="readout"><span id="probe-position-label">探针位置 r</span><strong id="probe-position">—</strong></div>
+            <div class="readout emph"><span>探针处磁感应强度 |B|</span><strong id="magnetic-strength">—</strong></div>
+            <p class="interpretation" id="magnetic-direction">—</p>
+          </aside>
+        </div>
+        <p class="model-note"><strong>模型条件</strong> 直导线取无限长，圆环读数仅计算轴线上磁场（圆环场线为定性示意），螺线管按理想长螺线管处理并忽略端部效应。电流正负表示图示坐标中的方向反转；μ₀ = 4π × 10⁻⁷ T·m/A。</p>
+      </section>
+
+      <section class="model-panel" id="charged-particle" aria-labelledby="charged-particle-title" hidden>
+        <div class="model-heading">
+          <div><p class="section-kicker">MODEL 02 / CHARGED PARTICLE IN B</p><h3 id="charged-particle-title">磁场如何改变运动电荷的方向？</h3><p>用右手定则判断洛伦兹力；调节入射角，比较圆周运动与螺旋运动。</p></div>
+          <div class="formula">F = qv × B　　r = mv<sub>⊥</sub> / |q|B</div>
+        </div>
+        <div class="workspace">
+          <div class="canvas-card">
+            <div class="canvas-topline"><span class="live-dot"></span> 均匀磁场中的粒子轨迹 <span class="canvas-hint">轨迹按当前参数自动缩放</span></div>
+            <canvas id="particle-canvas" aria-label="均匀磁场中带电粒子的圆周或螺旋轨迹、速度和洛伦兹力"></canvas>
+            <div class="canvas-footer"><span><i class="legend-field"></i> 均匀磁场 B</span><span><i class="legend-particle"></i> 粒子轨迹</span><span><i class="legend-force"></i> 瞬时洛伦兹力 F</span><span>动画横轴为磁场方向</span></div>
+          </div>
+          <aside class="control-card" aria-label="带电粒子参数">
+            <h4>实验参数</h4>
+            <label class="select-control" for="particle-kind"><span>粒子</span><select id="particle-kind"><option value="electron">电子</option><option value="proton">质子</option></select></label>
+            <label class="range-control" for="particle-b"><span>磁感应强度 B</span><output id="particle-b-value">0.25 T</output><input id="particle-b" type="range" min="0" max="1" step="0.01" value="0.25"></label>
+            <label class="range-control" for="particle-speed"><span>初速度 v</span><output id="particle-speed-value">2.0 × 10⁶ m/s</output><input id="particle-speed" type="range" min="200000" max="20000000" step="200000" value="2000000"></label>
+            <label class="range-control" for="particle-angle"><span>入射角 θ（相对 B）</span><output id="particle-angle-value">45°</output><input id="particle-angle" type="range" min="0" max="90" step="1" value="45"></label>
+            <label class="range-control" for="particle-time"><span>观察时刻</span><output id="particle-time-value">0.00 周期</output><input id="particle-time" type="range" min="0" max="2" step="0.01" value="0"></label>
+            <div class="button-row particle-buttons"><button class="action-button" id="particle-play" type="button">▶ 播放</button><button class="secondary-button" id="particle-step" type="button">＋ 逐步</button><button class="secondary-button" id="particle-reset" type="button">重置</button></div>
+            <div class="readout"><span>回旋半径 r</span><strong id="particle-radius">—</strong></div>
+            <div class="readout"><span>回旋周期 T</span><strong id="particle-period">—</strong></div>
+            <div class="readout emph"><span>瞬时洛伦兹力 |F|</span><strong id="particle-force">—</strong></div>
+            <p class="interpretation" id="particle-explanation">磁力始终垂直于瞬时速度，因此不改变粒子速率。</p>
+          </aside>
+        </div>
+        <p class="model-note"><strong>模型条件</strong> 粒子非相对论，磁场均匀且恒定；采用解析螺旋轨迹，动画不会因数值积分误差改变速率。角度 θ 为速度与磁场的夹角；θ = 0° 时沿磁场直线运动，θ = 90° 时为圆周运动。磁场为零时显示直线运动。</p>
+      </section>
+      <section class="model-panel" id="magnetic-medium" aria-labelledby="magnetic-medium-title" hidden>
+        <div class="model-heading"><div><p class="section-kicker">MODEL 03 / MAGNETIC MATERIALS</p><h3 id="magnetic-medium-title">磁介质怎样改变磁场？</h3><p>比较弱磁性材料的线性响应，并用磁滞回线观察铁磁体的历史依赖。</p></div><div class="formula">B = μ₀(H + M)　　M = χ<sub>m</sub>H</div></div>
+        <div class="workspace"><div class="canvas-card"><div class="canvas-topline"><span class="live-dot"></span> 材料内部磁化示意与 M—H 曲线 <span class="canvas-hint">铁磁体可正反扫描</span></div><canvas id="medium-canvas" aria-label="抗磁、顺磁及铁磁材料的磁化方向和磁滞曲线"></canvas><div class="canvas-footer"><span><i class="legend-field"></i> 外加磁场 H</span><span><i class="legend-particle"></i> 磁化强度 M</span><span>磁畴箭头为定性示意</span></div></div>
+          <aside class="control-card" aria-label="磁介质参数"><h4>材料与磁场</h4><label class="select-control" for="medium-kind"><span>材料模型</span><select id="medium-kind"><option value="diamagnetic">抗磁：铋（χₘ = −1.7 × 10⁻⁵）</option><option value="paramagnetic">顺磁：铝（χₘ = +2.2 × 10⁻⁵）</option><option value="ferromagnetic">铁磁：教学磁滞模型</option></select></label><label class="range-control" for="medium-h"><span>外加磁场强度 H</span><output id="medium-h-value">+500 A/m</output><input id="medium-h" type="range" min="-1500" max="1500" step="10" value="500"></label><div class="button-row"><button class="action-button" id="medium-sweep" type="button">▶ 扫描磁滞回线</button><button class="secondary-button" id="medium-reset" type="button">重置</button></div><div class="readout"><span>磁化强度 M</span><strong id="medium-m">—</strong></div><div class="readout"><span>介质中磁感应强度 B</span><strong id="medium-b">—</strong></div><div class="readout emph"><span>同一 H 下真空磁感应强度 μ₀H</span><strong id="medium-b-vacuum">—</strong></div><p class="interpretation" id="medium-explanation">—</p></aside></div>
+        <p class="model-note"><strong>模型条件</strong> 抗磁铋和顺磁铝按弱场线性响应，示意箭头放大以便观察；铁磁曲线是带饱和、剩磁与矫顽力的简化教学模型，不对应特定材料的实测磁化曲线。B = μ₀(H + M)，其中 H 为外加磁场强度，M 为磁化强度。</p>
+      </section>
+
+      <section class="model-panel" id="induction" aria-labelledby="induction-title" hidden>
+        <div class="model-heading"><div><p class="section-kicker">MODEL 04 / FARADAY INDUCTION</p><h3 id="induction-title">线圈转动时，磁通量如何变化？</h3><p>改变线圈匝数、面积、磁场、转速与初始角度，观察磁通链和感应电动势。</p></div><div class="formula">ε = −d(NΦ<sub>B</sub>)/dt　　Φ<sub>B</sub> = BA cos θ</div></div>
+        <div class="workspace"><div class="canvas-card"><div class="canvas-topline"><span class="live-dot"></span> 匀强磁场中的旋转线圈 <span class="canvas-hint">时间曲线显示两个周期</span></div><canvas id="induction-canvas" aria-label="旋转线圈的磁通量和感应电动势曲线"></canvas><div class="canvas-footer"><span><i class="legend-potential"></i> 磁通链 NΦ<sub>B</sub></span><span><i class="legend-field"></i> 感应电动势 ε</span><span>法线方向定义正磁通</span></div></div>
+          <aside class="control-card" aria-label="法拉第感应参数"><h4>线圈与磁场</h4><label class="range-control" for="coil-turns"><span>线圈匝数 N</span><output id="coil-turns-value">40 匝</output><input id="coil-turns" type="range" min="1" max="200" step="1" value="40"></label><label class="range-control" for="coil-b"><span>磁感应强度 B</span><output id="coil-b-value">0.25 T</output><input id="coil-b" type="range" min="0" max="1" step="0.01" value="0.25"></label><label class="range-control" for="coil-area"><span>每匝面积 A</span><output id="coil-area-value">25 cm²</output><input id="coil-area" type="range" min="1" max="100" step="1" value="25"></label><label class="range-control" for="coil-frequency"><span>转动频率 f</span><output id="coil-frequency-value">0.50 Hz</output><input id="coil-frequency" type="range" min="0.1" max="2" step="0.05" value="0.5"></label><label class="range-control" for="coil-angle"><span>初始夹角 θ₀</span><output id="coil-angle-value">0°</output><input id="coil-angle" type="range" min="0" max="180" step="5" value="0"></label><label class="range-control" for="coil-time"><span>观察时间</span><output id="coil-time-value">0.00 s</output><input id="coil-time" type="range" min="0" max="2" step="0.01" value="0"></label><div class="button-row"><button class="action-button" id="coil-play" type="button">▶ 播放</button><button class="secondary-button" id="coil-step" type="button">＋ 逐步</button><button class="secondary-button" id="coil-reset" type="button">重置</button></div><div class="readout"><span>磁通链 NΦ<sub>B</sub></span><strong id="coil-flux">—</strong></div><div class="readout emph"><span>感应电动势 ε</span><strong id="coil-emf">—</strong></div><p class="interpretation" id="coil-explanation">—</p></aside></div>
+        <p class="model-note"><strong>模型条件</strong> 线圈在均匀、恒定磁场中匀速转动；θ 是磁场与线圈面积法线的夹角。按 ε = −d(NΦ<sub>B</sub>)/dt 取符号，改变转向或法线约定会改变正负号。播放是慢速教学动画，数值按真实频率计算。</p>
+      </section>
+
+      <section class="model-panel" id="motional-emf" aria-labelledby="motional-emf-title" hidden>
+        <div class="model-heading"><div><p class="section-kicker">MODEL 05 / MOTIONAL EMF</p><h3 id="motional-emf-title">导体棒运动怎样产生电流？</h3><p>调节磁场、棒长、速度与电阻，检验感应电动势和能量守恒。</p></div><div class="formula">ε = BLv　　I = ε/R　　P<sub>机械</sub> = I²R</div></div>
+        <div class="workspace"><div class="canvas-card"><div class="canvas-topline"><span class="live-dot"></span> 导轨上的滑动导体棒 <span class="canvas-hint">位置滑块可代替拖动</span></div><canvas id="motional-canvas" aria-label="磁场中导体棒沿导轨运动并产生感应电流"></canvas><div class="canvas-footer"><span><i class="legend-field"></i> 磁场方向</span><span><i class="legend-positive"></i> 棒上正电荷受力方向</span><span>磁阻力总是反向于运动</span></div></div>
+          <aside class="control-card" aria-label="动生电动势参数"><h4>导体棒与导轨</h4><label class="select-control" for="rod-field-direction"><span>磁场方向</span><select id="rod-field-direction"><option value="1">垂直纸面向里（×）</option><option value="-1">垂直纸面向外（·）</option></select></label><label class="range-control" for="rod-b"><span>磁感应强度 |B|</span><output id="rod-b-value">0.50 T</output><input id="rod-b" type="range" min="0" max="1" step="0.01" value="0.5"></label><label class="range-control" for="rod-length"><span>导体棒长度 L</span><output id="rod-length-value">0.50 m</output><input id="rod-length" type="range" min="0.1" max="1.5" step="0.05" value="0.5"></label><label class="range-control" for="rod-velocity"><span>有符号速度 v</span><output id="rod-velocity-value">+1.00 m/s</output><input id="rod-velocity" type="range" min="-2" max="2" step="0.05" value="1"></label><label class="range-control" for="rod-resistance"><span>回路电阻 R</span><output id="rod-resistance-value">2.0 Ω</output><input id="rod-resistance" type="range" min="0.2" max="10" step="0.1" value="2"></label><label class="range-control" for="rod-position"><span>导体棒位置 x</span><output id="rod-position-value">0.60 m</output><input id="rod-position" type="range" min="0.1" max="1.5" step="0.01" value="0.6"></label><div class="button-row"><button class="action-button" id="rod-play" type="button">▶ 播放</button><button class="secondary-button" id="rod-reset" type="button">重置位置</button></div><div class="readout"><span>感应电流 I</span><strong id="rod-current">—</strong></div><div class="readout"><span>磁阻力 F<sub>x</sub></span><strong id="rod-force">—</strong></div><div class="readout emph"><span>机械输入功率 = 焦耳热功率</span><strong id="rod-power">—</strong></div><p class="interpretation" id="rod-explanation">—</p></aside></div>
+        <p class="model-note"><strong>模型条件</strong> 棒与导轨理想导电，回路总电阻集中表示为 R；磁场垂直于回路平面，棒以给定恒定速度运动。维持匀速所需外力需克服磁阻力，输入机械功率转化为电阻上的焦耳热。</p>
+      </section>
+
+      <section class="model-panel" id="rlc-oscillation" aria-labelledby="rlc-title" hidden>
+        <div class="model-heading"><div><p class="section-kicker">MODEL 06 / LC AND RLC OSCILLATIONS</p><h3 id="rlc-title">电磁能量如何在电容与电感间交换？</h3><p>改变 L、C、R 和初始电压，比较欠阻尼、临界阻尼与过阻尼响应。</p></div><div class="formula">Lq″ + Rq′ + q/C = 0　　ω₀ = 1/√(LC)</div></div>
+        <div class="workspace"><div class="canvas-card"><div class="canvas-topline"><span class="live-dot"></span> 串联 RLC 电路与能量随时间变化 <span class="canvas-hint">时间轴自动适配阻尼</span></div><canvas id="rlc-canvas" aria-label="串联 RLC 电路中电荷、电流和电磁能量变化"></canvas><div class="canvas-footer"><span><i class="legend-potential"></i> 电容电场能</span><span><i class="legend-field"></i> 电感磁场能</span><span><i class="legend-force"></i> 电阻耗散能</span></div></div>
+          <aside class="control-card" aria-label="RLC 电路参数"><h4>串联电路参数</h4><label class="range-control" for="rlc-l"><span>电感 L</span><output id="rlc-l-value">100 mH</output><input id="rlc-l" type="range" min="10" max="500" step="5" value="100"></label><label class="range-control" for="rlc-c"><span>电容 C</span><output id="rlc-c-value">10 μF</output><input id="rlc-c" type="range" min="1" max="100" step="1" value="10"></label><label class="range-control" for="rlc-r"><span>电阻 R</span><output id="rlc-r-value">40 Ω</output><input id="rlc-r" type="range" min="0" max="400" step="1" value="40"></label><label class="range-control" for="rlc-voltage"><span>初始电压 U₀</span><output id="rlc-voltage-value">10 V</output><input id="rlc-voltage" type="range" min="1" max="20" step="1" value="10"></label><label class="range-control" for="rlc-time"><span>观察时间</span><output id="rlc-time-value">0 s</output><input id="rlc-time" type="range" min="0" max="1" step="0.002" value="0"></label><div class="button-row"><button class="action-button" id="rlc-play" type="button">▶ 播放</button><button class="secondary-button" id="rlc-step" type="button">＋ 逐步</button><button class="secondary-button" id="rlc-reset" type="button">重置</button></div><div class="readout"><span>阻尼状态 / 临界电阻</span><strong id="rlc-regime">—</strong></div><div class="readout"><span>电容电荷 q / 电流 i</span><strong id="rlc-charge-current">—</strong></div><div class="readout emph"><span>电场能 + 磁场能 + 耗散能</span><strong id="rlc-energy">—</strong></div><p class="interpretation" id="rlc-explanation">—</p></aside></div>
+        <p class="model-note"><strong>模型条件</strong> 初始时电容带电、电流为零；串联 RLC 采用解析解，避免数值积分漂移。R = 0 时能量在电场与磁场间往复交换；R 增大后能量耗散，临界电阻 R<sub>c</sub> = 2√(L/C)。</p>
+      </section>
+
+      <section class="model-panel" id="em-wave" aria-labelledby="em-wave-title" hidden>
+        <div class="model-heading"><div><p class="section-kicker">MODEL 07 / VACUUM ELECTROMAGNETIC WAVE</p><h3 id="em-wave-title">电场与磁场如何一起向前传播？</h3><p>沿传播方向观察真空中的平面波，比较相互垂直的场、波长和能流。</p></div><div class="formula">E ⟂ B ⟂ k　　E/B = c　　λ = c/f</div></div>
+        <div class="workspace"><div class="canvas-card"><div class="canvas-topline"><span class="live-dot"></span> 真空平面波场分量与空间相位 <span class="canvas-hint">播放相位随时间推进</span></div><canvas id="wave-canvas" aria-label="电场和磁场相互垂直并沿传播方向前进的平面电磁波"></canvas><div class="canvas-footer"><span><i class="legend-particle"></i> 电场 E</span><span><i class="legend-field"></i> 磁场 cB（按同一幅度标尺）</span><span>传播方向由 E × B 确定</span></div></div>
+          <aside class="control-card" aria-label="真空电磁波参数"><h4>波的参数</h4><label class="range-control" for="wave-frequency"><span>频率 f</span><output id="wave-frequency-value">1.00 GHz</output><input id="wave-frequency" type="range" min="0.5" max="5" step="0.05" value="1"></label><label class="range-control" for="wave-e0"><span>电场振幅 E₀</span><output id="wave-e0-value">2.0 V/m</output><input id="wave-e0" type="range" min="0.1" max="5" step="0.1" value="2"></label><label class="range-control" for="wave-polarization"><span>线偏振方向</span><output id="wave-polarization-value">0°</output><input id="wave-polarization" type="range" min="0" max="90" step="1" value="0"></label><label class="range-control" for="wave-phase"><span>相位推进</span><output id="wave-phase-value">0.00 周期</output><input id="wave-phase" type="range" min="0" max="2" step="0.01" value="0"></label><div class="button-row"><button class="action-button" id="wave-play" type="button">▶ 播放</button><button class="secondary-button" id="wave-step" type="button">＋ 逐步</button><button class="secondary-button" id="wave-reset" type="button">重置</button></div><div class="readout"><span>波长 λ / 波速 c</span><strong id="wave-lambda-speed">—</strong></div><div class="readout"><span>磁场振幅 B₀</span><strong id="wave-b0">—</strong></div><div class="readout emph"><span>平均能流强度 ⟨S⟩</span><strong id="wave-intensity">—</strong></div><p class="interpretation" id="wave-explanation">—</p></aside></div>
+        <p class="model-note"><strong>模型条件</strong> 真空中沿 +x 方向传播的单色平面波；电场与磁场同相且互相垂直，满足 E₀/B₀ = c = 1/√(μ₀ε₀)。偏振控制电场在横向平面内的方向；图中将 B 乘以 c 后绘制，以便与 E 使用共同振幅标尺。动画相位推进速度放慢，波长与场值仍按设定频率计算。</p>
+      </section>
+    </main>
+    <footer class="site-footer"><span>COLLEGE PHYSICS DIGITAL MODELS</span><span>电磁学 [2] · 静磁场至电磁波</span></footer>
+  </div>
+</body>
+</html>
