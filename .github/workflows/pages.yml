@@ -28,10 +28,12 @@ jobs:
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - name: Prepare static site
         run: |
-          mkdir -p '_site/电磁学[1]'
-          cp index.html site.css _site/
+          mkdir -p '_site/电磁学[1]' '_site/电磁学[2]'
+          cp index.html site.css model-nav.js _site/
           cp '电磁学[1]/index.html' '电磁学[1]/styles.css' '_site/电磁学[1]/'
           cp -R '电磁学[1]/js' '_site/电磁学[1]/'
+          cp '电磁学[2]/index.html' '电磁学[2]/styles.css' '_site/电磁学[2]/'
+          cp -R '电磁学[2]/js' '_site/电磁学[2]/'
       - name: Upload static site
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
