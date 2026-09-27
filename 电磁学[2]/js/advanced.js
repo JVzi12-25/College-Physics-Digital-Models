@@ -10,6 +10,9 @@ import {
 } from './physics.js';
 
 const $ = (id) => document.getElementById(id);
+const MEDIUM_FIELD_LIMIT = 10000;
+const COIL_MAX_CYCLES = 4;
+const WAVE_MAX_PHASE = 4;
 const fmt = (value, digits = 2) => new Intl.NumberFormat('zh-CN', { maximumFractionDigits: digits }).format(value);
 const signed = (value, digits = 2) => `${value > 0 ? '+' : value < 0 ? '−' : ''}${fmt(Math.abs(value), digits)}`;
 const scientific = (value, digits = 2) => {
@@ -102,19 +105,19 @@ function drawMedium() {
   text(ctx, '外加 H', materialWidth / 2, top + blockHeight + 47, '#f5ce74', 'center', 11);
 
   const graph = { x: materialWidth + 42, y: 58, w: width - materialWidth - 73, h: height - 103 };
-  const maxM = ferromagnetic ? 1.2e6 : Math.max(0.04, Math.abs(1500 * mediumModel().susceptibility) * 1.2);
-  axes(ctx, graph, { xMin: -1500, xMax: 1500, yMin: -maxM, yMax: maxM, title: '磁化曲线 M(H)', xLabel: 'H / A·m⁻¹', yLabel: ferromagnetic ? 'M / A·m⁻¹' : 'M / A·m⁻¹' });
+  const maxM = ferromagnetic ? 1.2e6 : Math.max(0.04, Math.abs(MEDIUM_FIELD_LIMIT * mediumModel().susceptibility) * 1.2);
+  axes(ctx, graph, { xMin: -MEDIUM_FIELD_LIMIT, xMax: MEDIUM_FIELD_LIMIT, yMin: -maxM, yMax: maxM, title: '磁化曲线 M(H)', xLabel: 'H / A·m⁻¹', yLabel: ferromagnetic ? 'M / A·m⁻¹' : 'M / A·m⁻¹' });
   if (ferromagnetic) {
-    plot(ctx, graph, medium.history, { color: '#f1c768', xMin: -1500, xMax: 1500, yMin: -maxM, yMax: maxM, width: 2.5 });
+    plot(ctx, graph, medium.history, { color: '#f1c768', xMin: -MEDIUM_FIELD_LIMIT, xMax: MEDIUM_FIELD_LIMIT, yMin: -maxM, yMax: maxM, width: 2.5 });
     const curve = [];
-    for (let h = -1500; h <= 1500; h += 12) curve.push({ x: h, y: 1.2e6 * Math.tanh((h - 150) / 350) });
-    plot(ctx, graph, curve, { color: '#657783', xMin: -1500, xMax: 1500, yMin: -maxM, yMax: maxM, width: 1.2, alpha: 0.65 });
+    for (let h = -MEDIUM_FIELD_LIMIT; h <= MEDIUM_FIELD_LIMIT; h += 80) curve.push({ x: h, y: 1.2e6 * Math.tanh((h - 150) / 350) });
+    plot(ctx, graph, curve, { color: '#657783', xMin: -MEDIUM_FIELD_LIMIT, xMax: MEDIUM_FIELD_LIMIT, yMin: -maxM, yMax: maxM, width: 1.2, alpha: 0.65 });
   } else {
     const curve = [];
-    for (let h = -1500; h <= 1500; h += 15) curve.push({ x: h, y: mediumModel().susceptibility * h });
-    plot(ctx, graph, curve, { color: medium.kind === 'diamagnetic' ? '#86baf0' : '#88e5c9', xMin: -1500, xMax: 1500, yMin: -maxM, yMax: maxM, width: 2.4 });
+    for (let h = -MEDIUM_FIELD_LIMIT; h <= MEDIUM_FIELD_LIMIT; h += 80) curve.push({ x: h, y: mediumModel().susceptibility * h });
+    plot(ctx, graph, curve, { color: medium.kind === 'diamagnetic' ? '#86baf0' : '#88e5c9', xMin: -MEDIUM_FIELD_LIMIT, xMax: MEDIUM_FIELD_LIMIT, yMin: -maxM, yMax: maxM, width: 2.4 });
   }
-  const pointMap = plot(ctx, graph, [{ x: medium.h, y: state.magnetization }], { color: '#f5ce74', xMin: -1500, xMax: 1500, yMin: -maxM, yMax: maxM, width: 0 });
+  const pointMap = plot(ctx, graph, [{ x: medium.h, y: state.magnetization }], { color: '#f5ce74', xMin: -MEDIUM_FIELD_LIMIT, xMax: MEDIUM_FIELD_LIMIT, yMin: -maxM, yMax: maxM, width: 0 });
   ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(pointMap.x(medium.h), pointMap.y(state.magnetization), 5, 0, Math.PI * 2); ctx.fill();
   $('medium-h-value').textContent = `${signed(medium.h, 0)} A/m`;
   $('medium-m').textContent = `${quantity(state.magnetization, 'A/m', 3)}`;
@@ -125,6 +128,7 @@ function drawMedium() {
     : medium.kind === 'diamagnetic'
       ? '抗磁材料的磁化方向与外场相反；这里以铋的弱场磁化率作例，磁化对 B 的改变量很小。'
       : '顺磁材料的磁化方向与外场相同；这里以铝的弱场磁化率作例，移去外场后不保留明显剩磁。';
+  window.syncRangeNumberInputs?.();
 }
 function setMediumField(value) {
   const next = Number(value);
@@ -140,14 +144,14 @@ $('medium-kind').addEventListener('change', (event) => { pauseMedium(); medium.k
 $('medium-h').addEventListener('input', (event) => setMediumField(event.target.value));
 $('medium-sweep').addEventListener('click', () => {
   if (medium.frame !== null) { pauseMedium(); return; }
-  medium.h = -1500; medium.lastH = -1500; medium.m = -1.2e6; medium.history = [{ x: -1500, y: medium.m }]; medium.direction = 1; $('medium-h').value = '-1500';
+  medium.h = -MEDIUM_FIELD_LIMIT; medium.lastH = -MEDIUM_FIELD_LIMIT; medium.m = -1.2e6; medium.history = [{ x: -MEDIUM_FIELD_LIMIT, y: medium.m }]; medium.direction = 1; $('medium-h').value = String(-MEDIUM_FIELD_LIMIT);
   $('medium-sweep').textContent = 'Ⅱ 暂停';
   const tick = (timestamp) => {
     if (medium.lastFrame === null) medium.lastFrame = timestamp;
     const dt = Math.min(0.08, (timestamp - medium.lastFrame) / 1000); medium.lastFrame = timestamp;
-    let next = medium.h + medium.direction * 1000 * dt;
-    if (next >= 1500) { next = 1500; medium.direction = -1; }
-    if (next <= -1500) { next = -1500; medium.direction = 1; }
+    let next = medium.h + medium.direction * MEDIUM_FIELD_LIMIT * dt;
+    if (next >= MEDIUM_FIELD_LIMIT) { next = MEDIUM_FIELD_LIMIT; medium.direction = -1; }
+    if (next <= -MEDIUM_FIELD_LIMIT) { next = -MEDIUM_FIELD_LIMIT; medium.direction = 1; }
     $('medium-h').value = String(next); setMediumField(next); medium.frame = requestAnimationFrame(tick);
   };
   medium.frame = requestAnimationFrame(tick);
@@ -179,15 +183,15 @@ function drawCoil() {
   text(ctx, 'B ⊗', cx, cy - 83, '#90b1b0', 'center', 12);
   const graphX = width * 0.35; const graphW = width - graphX - 27; const graphH = Math.max(48, (height - 82) / 2 - 14);
   const rect1 = { x: graphX, y: 44, w: graphW, h: graphH }; const rect2 = { x: graphX, y: 54 + graphH, w: graphW, h: graphH };
-  axes(ctx, rect1, { xMin: 0, xMax: 2, yMin: -1.15, yMax: 1.15, title: '磁通链 / 峰值', xLabel: '旋转周期', yLabel: 'NΦ / NΦ₀' });
-  axes(ctx, rect2, { xMin: 0, xMax: 2, yMin: -1.15, yMax: 1.15, title: '感应电动势 / 峰值', xLabel: '旋转周期', yLabel: 'ε / ε₀' });
+  axes(ctx, rect1, { xMin: 0, xMax: COIL_MAX_CYCLES, yMin: -1.15, yMax: 1.15, title: '磁通链 / 峰值', xLabel: '旋转周期', yLabel: 'NΦ / NΦ₀' });
+  axes(ctx, rect2, { xMin: 0, xMax: COIL_MAX_CYCLES, yMin: -1.15, yMax: 1.15, title: '感应电动势 / 峰值', xLabel: '旋转周期', yLabel: 'ε / ε₀' });
   const fluxPoints = []; const emfPoints = [];
-  for (let i = 0; i <= 180; i++) {
-    const cycles = i * 2 / 180; const sample = coilState(cycles);
+  for (let i = 0; i <= 240; i++) {
+    const cycles = i * COIL_MAX_CYCLES / 240; const sample = coilState(cycles);
     fluxPoints.push({ x: cycles, y: sample.fluxLinkage / fluxAmplitude }); emfPoints.push({ x: cycles, y: sample.emf / emfAmplitude });
   }
-  const mapFlux = plot(ctx, rect1, fluxPoints, { color: '#f5ce74', xMin: 0, xMax: 2, yMin: -1.15, yMax: 1.15, width: 2 });
-  const mapEmf = plot(ctx, rect2, emfPoints, { color: '#88e5c9', xMin: 0, xMax: 2, yMin: -1.15, yMax: 1.15, width: 2 });
+  const mapFlux = plot(ctx, rect1, fluxPoints, { color: '#f5ce74', xMin: 0, xMax: COIL_MAX_CYCLES, yMin: -1.15, yMax: 1.15, width: 2 });
+  const mapEmf = plot(ctx, rect2, emfPoints, { color: '#88e5c9', xMin: 0, xMax: COIL_MAX_CYCLES, yMin: -1.15, yMax: 1.15, width: 2 });
   ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(mapFlux.x(coil.cycles), mapFlux.y(state.fluxLinkage / fluxAmplitude), 4, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(mapEmf.x(coil.cycles), mapEmf.y(state.emf / emfAmplitude), 4, 0, Math.PI * 2); ctx.fill();
   $('coil-turns-value').textContent = `${fmt(coil.turns, 0)} 匝`; $('coil-b-value').textContent = `${fmt(coil.b, 2)} T`;
@@ -198,15 +202,16 @@ function drawCoil() {
   $('coil-explanation').textContent = state.emf === 0
     ? '此刻磁通链位于极值或磁场为零，因此瞬时感应电动势为零。'
     : `ε 的符号由所选法线确定；当前磁通链${state.emf > 0 ? '正在减小' : '正在增加'}，感应电动势方向依楞次定律反抗磁通变化。`;
+  window.syncRangeNumberInputs?.();
 }
 function advanceCoil(timestamp) {
   if (coil.lastFrame === null) coil.lastFrame = timestamp;
   coil.cycles += Math.min(0.08, (timestamp - coil.lastFrame) / 1000) * 0.35; coil.lastFrame = timestamp;
-  if (coil.cycles >= 2) { coil.cycles = 2; pauseCoil(); drawCoil(); return; }
+  if (coil.cycles >= COIL_MAX_CYCLES) { coil.cycles = COIL_MAX_CYCLES; pauseCoil(); drawCoil(); return; }
   drawCoil(); coil.frame = requestAnimationFrame(advanceCoil);
 }
-$('coil-play').addEventListener('click', () => { if (coil.frame !== null) return pauseCoil(); if (coil.cycles >= 2) coil.cycles = 0; $('coil-play').textContent = 'Ⅱ 暂停'; coil.frame = requestAnimationFrame(advanceCoil); });
-$('coil-step').addEventListener('click', () => { pauseCoil(); coil.cycles = Math.min(2, coil.cycles + 0.05); drawCoil(); });
+$('coil-play').addEventListener('click', () => { if (coil.frame !== null) return pauseCoil(); if (coil.cycles >= COIL_MAX_CYCLES) coil.cycles = 0; $('coil-play').textContent = 'Ⅱ 暂停'; coil.frame = requestAnimationFrame(advanceCoil); });
+$('coil-step').addEventListener('click', () => { pauseCoil(); coil.cycles = Math.min(COIL_MAX_CYCLES, coil.cycles + 0.05); drawCoil(); });
 $('coil-reset').addEventListener('click', () => { pauseCoil(); coil.cycles = 0; drawCoil(); });
 $('coil-time').addEventListener('input', (event) => { pauseCoil(); coil.cycles = Number(event.target.value); drawCoil(); });
 for (const [id, key, convert = Number] of [['coil-turns', 'turns'], ['coil-b', 'b'], ['coil-area', 'area', (v) => Number(v) * 1e-4], ['coil-frequency', 'frequency'], ['coil-angle', 'angle']]) {
@@ -225,15 +230,15 @@ function drawRod() {
     if (rod.direction > 0) { ctx.beginPath(); ctx.moveTo(x - 3, y - 3); ctx.lineTo(x + 3, y + 3); ctx.moveTo(x + 3, y - 3); ctx.lineTo(x - 3, y + 3); ctx.stroke(); }
     else { ctx.beginPath(); ctx.arc(x, y, 1.3, 0, Math.PI * 2); ctx.fillStyle = '#52736f'; ctx.fill(); }
   }
-  const rodX = x1 + (rod.position - 0.1) / 1.4 * (x2 - x1);
-  const halfLength = Math.min((railBottom - railTop) * 0.43, 48 + rod.length * 26);
+  const rodX = x1 + (rod.position - 0.05) / 4.95 * (x2 - x1);
+  const halfLength = Math.min((railBottom - railTop) * 0.43, 14 + rod.length * 24);
   ctx.strokeStyle = '#f1c768'; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(rodX, (railTop + railBottom) / 2 - halfLength); ctx.lineTo(rodX, (railTop + railBottom) / 2 + halfLength); ctx.stroke();
   ctx.lineCap = 'butt'; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(rodX, railTop, 4, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(rodX, railBottom, 4, 0, Math.PI * 2); ctx.fill();
   const state = motionalEmfState({ magneticField: rod.direction * rod.b, length: rod.length, velocity: rod.velocity, resistance: rod.resistance });
   const topPositive = state.emf >= 0; text(ctx, topPositive ? '＋' : '−', rodX + 11, railTop + 4, topPositive ? '#ffaaa0' : '#9bc9ef', 'left', 13, '700'); text(ctx, topPositive ? '−' : '＋', rodX + 11, railBottom + 4, topPositive ? '#9bc9ef' : '#ffaaa0', 'left', 13, '700');
   if (Math.abs(state.current) > 0) arrow(ctx, rodX, state.current > 0 ? railBottom - 13 : railTop + 13, rodX, state.current > 0 ? railTop + 13 : railBottom - 13, '#ffb090', 1.5 + Math.min(1, Math.abs(state.current) / 2) * 2.5, 7);
   if (Math.abs(rod.velocity) > 0.01) {
-    const velocityArrowLength = 20 + Math.min(2, Math.abs(rod.velocity)) * 24;
+    const velocityArrowLength = 20 + Math.min(1, Math.abs(rod.velocity) / 20) * 44;
     arrow(ctx, rodX, railTop - 30, rodX + Math.sign(rod.velocity) * velocityArrowLength, railTop - 30, '#88e5c9', 2, 8);
   }
   text(ctx, `v ${signed(rod.velocity, 2)} m/s`, rodX, railTop - 42, '#aaf2dd', 'center', 11);
@@ -249,12 +254,13 @@ function drawRod() {
   $('rod-explanation').textContent = rod.velocity === 0 || rod.b === 0
     ? '导体棒相对磁场静止或磁场为零，磁通不变，因此没有动生电动势。'
     : `运动电荷受 qv × B 作用形成电势差；外力维持匀速，机械输入功率与电阻焦耳热相等。电流方向为${state.current > 0 ? '正向' : '反向'}（按图示约定）。`;
+  window.syncRangeNumberInputs?.();
 }
 function advanceRod(timestamp) {
   if (rod.lastFrame === null) rod.lastFrame = timestamp;
   const dt = Math.min(0.08, (timestamp - rod.lastFrame) / 1000); rod.lastFrame = timestamp;
   rod.position += rod.velocity * dt;
-  if (rod.position <= 0.1 || rod.position >= 1.5 || rod.velocity === 0) { rod.position = Math.max(0.1, Math.min(1.5, rod.position)); pauseRod(); drawRod(); return; }
+  if (rod.position <= 0.05 || rod.position >= 5 || rod.velocity === 0) { rod.position = Math.max(0.05, Math.min(5, rod.position)); pauseRod(); drawRod(); return; }
   drawRod(); rod.frame = requestAnimationFrame(advanceRod);
 }
 $('rod-play').addEventListener('click', () => { if (rod.frame !== null) return pauseRod(); if (rod.velocity === 0) return; $('rod-play').textContent = 'Ⅱ 暂停'; rod.frame = requestAnimationFrame(advanceRod); });
@@ -327,6 +333,7 @@ function drawRlc() {
     : state.regime === '临界阻尼'
       ? '系统以不发生振荡的最快方式回到平衡；R 等于临界电阻。'
       : '阻尼较强，电荷不发生往复振荡而缓慢衰减；总能量逐步转化为电阻热。';
+  window.syncRangeNumberInputs?.();
 }
 function advanceRlc(timestamp) {
   if (rlc.lastFrame === null) rlc.lastFrame = timestamp;
@@ -353,8 +360,8 @@ function drawWave() {
   text(ctx, 'E / E₀', chartX, y1 - amp - 8, '#dceae9', 'left', 11, '700'); text(ctx, 'cB / E₀', chartX, y2 - amp - 8, '#dceae9', 'left', 11, '700');
   const displayLength = 0.6;
   const e = []; const b = [];
-  for (let i = 0; i <= 360; i++) {
-    const u = i / 360; const phase = state.waveNumber * u * displayLength - state.phase;
+  for (let i = 0; i <= 720; i++) {
+    const u = i / 720; const phase = state.waveNumber * u * displayLength - state.phase;
     e.push({ x: u, y: Math.cos(phase) }); b.push({ x: u, y: Math.cos(phase) });
   }
   for (const points of [e, b]) {
@@ -366,27 +373,29 @@ function drawWave() {
   text(ctx, `f ${fmt(wave.frequency / 1e9, 2)} GHz · λ ${quantity(state.wavelength, 'm', 2)}`, width - 12, 18, '#f5ce74', 'right', 10, '700');
   text(ctx, `E₀ ${quantity(wave.amplitude, 'V/m', 2)} · B₀ ${quantity(state.magneticAmplitude, 'T', 2)}`, width - 12, 33, '#b7ccd3', 'right', 10);
   const cx = insetW / 2 + 6; const cy = height * 0.49; const radius = Math.min(32, height * 0.13); const angle = wave.polarization * Math.PI / 180;
-  const vectorLength = radius * (0.28 + 0.72 * Math.min(1, wave.amplitude / 5));
+  const amplitudeFraction = Math.log10(1 + wave.amplitude / 0.01) / Math.log10(1 + 100 / 0.01);
+  const vectorLength = radius * (0.28 + 0.72 * Math.min(1, amplitudeFraction));
   ctx.strokeStyle = '#526d7a'; ctx.lineWidth = 1; ctx.strokeRect(cx - radius, cy - radius, radius * 2, radius * 2);
   arrow(ctx, cx, cy, cx + Math.sin(angle) * vectorLength, cy - Math.cos(angle) * vectorLength, '#83bfff', 2.5, 7);
   arrow(ctx, cx, cy, cx + Math.cos(angle) * vectorLength, cy + Math.sin(angle) * vectorLength, '#88e5c9', 2.5, 7);
   text(ctx, 'E', cx + Math.sin(angle) * radius, cy - Math.cos(angle) * radius - 4, '#a5d7ff', 'center', 11, '700');
   text(ctx, 'B', cx + Math.cos(angle) * radius + 2, cy + Math.sin(angle) * radius + 7, '#aaf2dd', 'center', 11, '700');
   arrow(ctx, cx - radius, cy + radius + 21, cx + radius, cy + radius + 21, '#f5ce74', 1.7, 6); text(ctx, 'k', cx, cy + radius + 36, '#f5ce74', 'center', 10);
-  $('wave-frequency-value').textContent = `${fmt(wave.frequency / 1e9, 2)} GHz`; $('wave-e0-value').textContent = `${fmt(wave.amplitude, 1)} V/m`;
+  $('wave-frequency-value').textContent = `${fmt(wave.frequency / 1e9, 2)} GHz`; $('wave-e0-value').textContent = `${fmt(wave.amplitude, wave.amplitude < 1 ? 2 : 1)} V/m`;
   $('wave-polarization-value').textContent = `${fmt(wave.polarization, 0)}°`; $('wave-phase-value').textContent = `${fmt(wave.phaseCycles, 2)} 周期`; $('wave-phase').value = String(wave.phaseCycles);
   $('wave-lambda-speed').textContent = `${quantity(state.wavelength, 'm', 3)} / ${quantity(SPEED_OF_LIGHT, 'm/s', 0)}`;
   $('wave-b0').textContent = quantity(state.magneticAmplitude, 'T', 3); $('wave-intensity').textContent = quantity(state.averageIntensity, 'W/m²', 3);
   $('wave-explanation').textContent = `E 与 B 同相，E₀/B₀ = ${quantity(SPEED_OF_LIGHT, 'm/s', 0)}；能流方向沿 +x，偏振角只改变横向场方向。`;
+  window.syncRangeNumberInputs?.();
 }
 function advanceWave(timestamp) {
   if (wave.lastFrame === null) wave.lastFrame = timestamp;
   wave.phaseCycles += Math.min(0.08, (timestamp - wave.lastFrame) / 1000) * 0.35; wave.lastFrame = timestamp;
-  if (wave.phaseCycles >= 2) { wave.phaseCycles = 2; pauseWave(); drawWave(); return; }
+  if (wave.phaseCycles >= WAVE_MAX_PHASE) { wave.phaseCycles = WAVE_MAX_PHASE; pauseWave(); drawWave(); return; }
   drawWave(); wave.frame = requestAnimationFrame(advanceWave);
 }
-$('wave-play').addEventListener('click', () => { if (wave.frame !== null) return pauseWave(); if (wave.phaseCycles >= 2) wave.phaseCycles = 0; $('wave-play').textContent = 'Ⅱ 暂停'; wave.frame = requestAnimationFrame(advanceWave); });
-$('wave-step').addEventListener('click', () => { pauseWave(); wave.phaseCycles = Math.min(2, wave.phaseCycles + 0.05); drawWave(); });
+$('wave-play').addEventListener('click', () => { if (wave.frame !== null) return pauseWave(); if (wave.phaseCycles >= WAVE_MAX_PHASE) wave.phaseCycles = 0; $('wave-play').textContent = 'Ⅱ 暂停'; wave.frame = requestAnimationFrame(advanceWave); });
+$('wave-step').addEventListener('click', () => { pauseWave(); wave.phaseCycles = Math.min(WAVE_MAX_PHASE, wave.phaseCycles + 0.05); drawWave(); });
 $('wave-reset').addEventListener('click', () => { pauseWave(); wave.phaseCycles = 0; drawWave(); });
 $('wave-phase').addEventListener('input', (event) => { pauseWave(); wave.phaseCycles = Number(event.target.value); drawWave(); });
 for (const [id, key, scale = 1] of [['wave-frequency', 'frequency', 1e9], ['wave-e0', 'amplitude'], ['wave-polarization', 'polarization']]) {

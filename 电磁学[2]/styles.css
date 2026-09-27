@@ -27,3 +27,12 @@ button,input,select{font:inherit}button{cursor:pointer}.model-heading .formula-s
 @media(max-width:950px){.model-heading .formula-stack{margin-top:16px}.particle-buttons{display:flex}.control-card .particle-buttons{grid-column:1/-1}}
 @media(max-width:640px){.model-heading .formula-stack{font-size:15px}.particle-buttons button{font-size:11px}.canvas-hint{font-size:10px}}
 .action-button:disabled,.secondary-button:disabled{opacity:.42;cursor:not-allowed}
+.range-control-with-number{display:grid;grid-template-columns:minmax(0,1fr) 86px;gap:8px 9px;align-items:center;min-width:0;margin:0 0 22px}
+.range-control-with-number label.range-control{display:contents}
+.range-control-with-number label.range-control>span{grid-column:1;grid-row:1;min-width:0}
+.range-control-with-number label.range-control>output{grid-column:2;grid-row:1;min-width:0;text-align:right}
+.range-control-with-number label.range-control>input[type=range]{grid-column:1;grid-row:2;width:100%;min-width:0;margin:0}
+.range-number-input{grid-column:2;grid-row:2;width:100%;min-width:0;padding:5px 7px;border:1px solid #395565;border-radius:7px;background:#132635;color:#effaf6;font-size:12px;font-variant-numeric:tabular-nums}
+.range-number-input:focus-visible{outline:2px solid #83dbc5;outline-offset:2px}
+.range-control-with-number[hidden],.geometry-control[hidden]{display:none}
+@media(min-width:641px) and (max-width:950px){.control-card>.range-control-with-number{grid-column:1/-1}}

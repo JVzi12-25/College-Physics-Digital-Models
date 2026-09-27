@@ -5,8 +5,10 @@ import {
   magneticFieldOnLoopAxis,
 } from './physics.js';
 import { initAdvancedModels } from './advanced.js';
+import { installRangeNumberInputs } from '../../光学/range-inputs.js';
 
 const $ = (id) => document.getElementById(id);
+const PARTICLE_MAX_CYCLES = 4;
 const number = (value, digits = 2) => new Intl.NumberFormat('zh-CN', { maximumFractionDigits: digits }).format(value);
 const signed = (value, digits = 1) => `${value > 0 ? '+' : value < 0 ? '−' : ''}${number(Math.abs(value), digits)}`;
 const superscript = (value) => String(value).replaceAll('-', '⁻').replaceAll('0', '⁰').replaceAll('1', '¹').replaceAll('2', '²').replaceAll('3', '³').replaceAll('4', '⁴').replaceAll('5', '⁵').replaceAll('6', '⁶').replaceAll('7', '⁷').replaceAll('8', '⁸').replaceAll('9', '⁹');
@@ -81,6 +83,11 @@ const magnetic = {
   wireProbe: { x: 0.1, y: 0.07 }, loopProbe: 0.14, solenoidProbe: { x: 0.5, y: 0.5 },
 };
 
+function loopScale(view) {
+  const radius = Math.max(0.01, magnetic.radius);
+  return Math.min(view.width / 1.65, view.height / 0.8, (view.width - 64) / (6.74 * radius), (view.height - 40) / (4.04 * radius));
+}
+
 function probeScreen(view) {
   const { width, height } = view;
   if (magnetic.geometry === 'wire') {
@@ -88,7 +95,7 @@ function probeScreen(view) {
     return { x: width / 2 + magnetic.wireProbe.x * scale, y: height / 2 - magnetic.wireProbe.y * scale };
   }
   if (magnetic.geometry === 'loop') {
-    const scale = Math.min(width / 1.65, height / 0.8);
+    const scale = loopScale(view);
     return { x: width / 2 + magnetic.loopProbe * scale, y: height / 2 };
   }
   return { x: width * magnetic.solenoidProbe.x, y: height * magnetic.solenoidProbe.y };
@@ -113,8 +120,8 @@ function drawWire(view) {
   const cx = width / 2; const cy = height / 2;
   const maxRadius = Math.min(width, height) * 0.45;
   const currentMagnitude = Math.abs(magnetic.current);
-  const fieldLines = currentMagnitude === 0 ? 0 : Math.max(1, Math.round(currentMagnitude));
-  const strength = currentMagnitude / 10;
+  const fieldLines = currentMagnitude === 0 ? 0 : Math.min(20, Math.max(1, Math.round(currentMagnitude)));
+  const strength = Math.min(1, currentMagnitude / 100);
   ctx.save(); ctx.strokeStyle = '#7ce0c3'; ctx.globalAlpha = 0.24 + strength * 0.48; ctx.lineWidth = 1.1 + strength * 1.1;
   for (let index = 1; index <= fieldLines; index++) {
     const radius = maxRadius * index / fieldLines;
@@ -149,16 +156,17 @@ function drawWire(view) {
 function drawLoop(view) {
   const { ctx, width, height } = view;
   const cx = width / 2; const cy = height / 2;
-  const scale = Math.min(width / 1.65, height / 0.8);
+  const scale = loopScale(view);
   const radiusPx = magnetic.radius * scale;
   const sign = Math.sign(magnetic.current);
   const currentMagnitude = Math.abs(magnetic.current);
-  const fieldLines = currentMagnitude === 0 ? 0 : Math.max(1, Math.round(currentMagnitude));
+  const fieldLines = currentMagnitude === 0 ? 0 : Math.min(20, Math.max(1, Math.round(currentMagnitude)));
+  const strength = Math.min(1, currentMagnitude / 100);
   for (let index = 1; index <= fieldLines; index++) {
     const fraction = index / fieldLines;
     const span = radiusPx * (1.45 + fraction * 1.92) + 12;
     const rise = radiusPx * (0.9 + fraction * 1.12) + 9;
-    ctx.save(); ctx.strokeStyle = '#7ce0c3'; ctx.globalAlpha = 0.28 + 0.42 * currentMagnitude / 10; ctx.lineWidth = 1.1 + currentMagnitude / 10;
+    ctx.save(); ctx.strokeStyle = '#7ce0c3'; ctx.globalAlpha = 0.28 + 0.42 * strength; ctx.lineWidth = 1.1 + strength;
     ctx.beginPath(); ctx.ellipse(cx, cy, span, rise, 0, 0, Math.PI * 2); ctx.stroke();
     const angle = sign >= 0 ? -0.55 : 0.55;
     const start = { x: cx + span * Math.cos(angle), y: cy + rise * Math.sin(angle) };
@@ -197,7 +205,7 @@ function drawSolenoid(view) {
   const inside = magnetic.solenoidProbe.x >= 0.2 && magnetic.solenoidProbe.x <= 0.8 && magnetic.solenoidProbe.y >= 0.27 && magnetic.solenoidProbe.y <= 0.73;
   ctx.strokeStyle = '#e6b76f'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(box.left, box.top); ctx.lineTo(box.right, box.top); ctx.moveTo(box.left, box.bottom); ctx.lineTo(box.right, box.bottom); ctx.stroke();
-  const turns = Math.max(9, Math.min(22, Math.round(magnetic.turnsPerMeter / 90)));
+  const turns = Math.round(8 + (magnetic.turnsPerMeter - 50) / (10000 - 50) * 14);
   ctx.strokeStyle = '#f0c17d'; ctx.lineWidth = 1.35;
   for (let index = 0; index <= turns; index++) {
     const x = box.left + (box.right - box.left) * index / turns;
@@ -210,7 +218,7 @@ function drawSolenoid(view) {
   if (magnetic.current !== 0) {
     const sign = Math.sign(magnetic.current);
     ctx.save(); ctx.strokeStyle = '#81e1c3'; ctx.fillStyle = '#a7f1d7'; ctx.globalAlpha = 0.86;
-    const fieldArrows = Math.max(1, Math.round(Math.abs(magnetic.current) / 2));
+    const fieldArrows = Math.min(10, Math.max(1, Math.round(Math.abs(magnetic.current) / 10)));
     for (let index = 1; index <= fieldArrows; index++) {
       const y = box.top + (box.bottom - box.top) * index / (fieldArrows + 1);
       const from = sign > 0 ? { x: box.left + 18, y } : { x: box.right - 18, y };
@@ -252,6 +260,7 @@ function drawMagnetic() {
     $('radius-control').hidden = true; $('turns-control').hidden = false;
     drawSolenoid(view);
   }
+  window.syncRangeNumberInputs?.();
 }
 
 $('source-geometry').addEventListener('change', (event) => { magnetic.geometry = event.target.value; drawMagnetic(); });
@@ -286,7 +295,7 @@ magneticCanvas.addEventListener('pointermove', (event) => {
     const angle = Math.atan2(y, x);
     magnetic.wireProbe = { x: radius * Math.cos(angle), y: radius * Math.sin(angle) };
   } else if (magnetic.geometry === 'loop') {
-    const scale = Math.min(width / 1.65, height / 0.8);
+    const scale = loopScale({ width, height });
     magnetic.loopProbe = Math.max(-0.72, Math.min(0.72, (point.x - width / 2) / scale));
   } else {
     magnetic.solenoidProbe = { x: Math.max(0.04, Math.min(0.96, point.x / width)), y: Math.max(0.08, Math.min(0.92, point.y / height)) };
@@ -316,7 +325,7 @@ function drawParticle() {
   if (view.width <= 0 || view.height <= 0) return;
   const { ctx, width, height } = view;
   drawBackground(ctx, width, height);
-  const fullPath = Array.from({ length: 241 }, (_, index) => chargedParticleState({ ...particleSettings(), cycles: 2 * index / 240 }));
+  const fullPath = Array.from({ length: 481 }, (_, index) => chargedParticleState({ ...particleSettings(), cycles: PARTICLE_MAX_CYCLES * index / 480 }));
   const projectedRaw = fullPath.map((state) => project(state.position, 1));
   const minX = Math.min(...projectedRaw.map((point) => point.x)); const maxX = Math.max(...projectedRaw.map((point) => point.x));
   const minY = Math.min(...projectedRaw.map((point) => point.y)); const maxY = Math.max(...projectedRaw.map((point) => point.y));
@@ -349,7 +358,7 @@ function drawParticle() {
   });
   ctx.strokeStyle = '#6c8290'; ctx.globalAlpha = 0.64; ctx.lineWidth = 2; ctx.stroke(); ctx.globalAlpha = 1;
 
-  const activeCount = Math.max(1, Math.round(particle.cycles / 2 * (fullPath.length - 1)));
+  const activeCount = Math.max(1, Math.round(particle.cycles / PARTICLE_MAX_CYCLES * (fullPath.length - 1)));
   ctx.beginPath();
   for (let index = 0; index <= activeCount; index++) {
     const point = screen(fullPath[index].position);
@@ -393,12 +402,15 @@ function drawParticle() {
     ? '磁场为零，洛伦兹力为零，粒子沿初速度方向做直线运动。'
     : angle === 0
       ? '速度平行于磁场，v × B = 0；粒子沿磁场方向做直线运动。'
+      : angle === 180
+        ? '速度与磁场反向，v × B = 0；粒子沿磁场反方向做直线运动。'
       : angle === 90
         ? `速度垂直于磁场，粒子做圆周运动；此刻洛伦兹力提供向心力，粒子速率保持不变。`
         : `速度分解为平行与垂直磁场的分量，粒子沿磁场做螺旋运动；磁力始终垂直于速度，速率保持不变。`;
   $('particle-speed-value').textContent = `${scientific(particle.speed)} m/s`;
   $('particle-b-value').textContent = `${number(particle.magneticField, 2)} T`;
   $('particle-angle-value').textContent = `${number(particle.angleDeg, 0)}°`;
+  window.syncRangeNumberInputs?.();
 }
 
 function pauseParticle() {
@@ -413,8 +425,8 @@ function animateParticle(timestamp) {
   const elapsed = Math.min(0.08, (timestamp - particle.lastFrame) / 1000);
   particle.lastFrame = timestamp;
   particle.cycles += elapsed * 0.32;
-  if (particle.cycles >= 2) {
-    particle.cycles = 2; $('particle-time').value = '2'; pauseParticle(); drawParticle(); return;
+  if (particle.cycles >= PARTICLE_MAX_CYCLES) {
+    particle.cycles = PARTICLE_MAX_CYCLES; $('particle-time').value = String(PARTICLE_MAX_CYCLES); pauseParticle(); drawParticle(); return;
   }
   $('particle-time').value = String(particle.cycles);
   drawParticle();
@@ -423,12 +435,12 @@ function animateParticle(timestamp) {
 
 $('particle-play').addEventListener('click', () => {
   if (particle.animationFrame !== null) { pauseParticle(); return; }
-  if (particle.cycles >= 2) { particle.cycles = 0; $('particle-time').value = '0'; drawParticle(); }
+  if (particle.cycles >= PARTICLE_MAX_CYCLES) { particle.cycles = 0; $('particle-time').value = '0'; drawParticle(); }
   $('particle-play').textContent = 'Ⅱ 暂停'; $('particle-play').setAttribute('aria-pressed', 'true');
   particle.animationFrame = requestAnimationFrame(animateParticle);
 });
 $('particle-step').addEventListener('click', () => {
-  pauseParticle(); particle.cycles = Math.min(2, particle.cycles + 0.05); $('particle-time').value = String(particle.cycles); drawParticle();
+  pauseParticle(); particle.cycles = Math.min(PARTICLE_MAX_CYCLES, particle.cycles + 0.05); $('particle-time').value = String(particle.cycles); drawParticle();
 });
 $('particle-reset').addEventListener('click', () => {
   pauseParticle(); particle.cycles = 0; $('particle-time').value = '0'; drawParticle();
@@ -471,3 +483,4 @@ const resizeObserver = new ResizeObserver(() => {
 document.querySelectorAll('.canvas-card').forEach((card) => resizeObserver.observe(card));
 drawMagnetic();
 drawParticle();
+installRangeNumberInputs();

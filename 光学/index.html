@@ -63,9 +63,9 @@
           </div>
           <aside class="control-card" aria-label="反射和折射参数">
             <h4>实验参数</h4>
-            <label class="range-control" for="n1"><span>介质 1 折射率 n₁</span><output id="n1-value">1.00</output><input id="n1" type="range" min="1" max="2.2" step="0.01" value="1"></label>
-            <label class="range-control" for="n2"><span>介质 2 折射率 n₂</span><output id="n2-value">1.50</output><input id="n2" type="range" min="1" max="2.2" step="0.01" value="1.5"></label>
-            <label class="range-control" for="incident-angle"><span>入射角 θ₁</span><output id="incident-angle-value">30°</output><input id="incident-angle" type="range" min="0" max="89" step="1" value="30"></label>
+            <label class="range-control" for="n1"><span>介质 1 折射率 n₁</span><output id="n1-value">1.00</output><input id="n1" type="range" min="1" max="3" step="0.01" value="1"></label>
+            <label class="range-control" for="n2"><span>介质 2 折射率 n₂</span><output id="n2-value">1.50</output><input id="n2" type="range" min="1" max="3" step="0.01" value="1.5"></label>
+            <label class="range-control" for="incident-angle"><span>入射角 θ₁</span><output id="incident-angle-value">30°</output><input id="incident-angle" type="range" min="0" max="90" step="1" value="30"></label>
             <div class="readout"><span>折射角 θ₂</span><strong id="refracted-angle">—</strong></div>
             <div class="readout emph"><span>临界角 θc</span><strong id="critical-angle">不存在</strong></div>
             <p class="interpretation" id="refraction-status" aria-live="polite">—</p>
@@ -89,9 +89,9 @@
           <aside class="control-card" aria-label="薄透镜参数">
             <h4>实验参数</h4>
             <label class="select-control" for="lens-kind"><span>透镜类型</span><select id="lens-kind"><option value="converging">凸透镜（会聚）</option><option value="diverging">凹透镜（发散）</option></select></label>
-            <label class="range-control" for="focal-length"><span>焦距 |f|</span><output id="focal-length-value">20 cm</output><input id="focal-length" type="range" min="5" max="40" step="1" value="20"></label>
-            <label class="range-control" for="object-distance"><span>物距 s</span><output id="object-distance-value">35 cm</output><input id="object-distance" type="range" min="5" max="100" step="1" value="35"></label>
-            <label class="range-control" for="object-height"><span>物高 h</span><output id="object-height-value">8 cm</output><input id="object-height" type="range" min="2" max="12" step="1" value="8"></label>
+            <label class="range-control" for="focal-length"><span>焦距 |f|</span><output id="focal-length-value">20 cm</output><input id="focal-length" type="range" min="2" max="100" step="1" value="20"></label>
+            <label class="range-control" for="object-distance"><span>物距 s</span><output id="object-distance-value">35 cm</output><input id="object-distance" type="range" min="1" max="200" step="1" value="35"></label>
+            <label class="range-control" for="object-height"><span>物高 h</span><output id="object-height-value">8 cm</output><input id="object-height" type="range" min="0.5" max="20" step="0.5" value="8"></label>
             <div class="readout"><span>像距 s′</span><strong id="image-distance">—</strong></div>
             <div class="readout emph"><span>放大率 m · 像的性质</span><strong id="magnification">—</strong></div>
             <p class="interpretation" id="lens-status" aria-live="polite">—</p>
@@ -114,9 +114,9 @@
           </div>
           <aside class="control-card" aria-label="双缝干涉参数">
             <h4>实验参数</h4>
-            <label class="range-control" for="double-wavelength"><span>波长 λ</span><output id="double-wavelength-value">550 nm</output><input id="double-wavelength" type="range" min="400" max="700" step="10" value="550"></label>
-            <label class="range-control" for="slit-separation"><span>双缝间距 d</span><output id="slit-separation-value">0.50 mm</output><input id="slit-separation" type="range" min="0.2" max="1" step="0.05" value="0.5"></label>
-            <label class="range-control" for="double-screen-distance"><span>屏距 L</span><output id="double-screen-distance-value">1.5 m</output><input id="double-screen-distance" type="range" min="0.5" max="3" step="0.1" value="1.5"></label>
+            <label class="range-control" for="double-wavelength"><span>波长 λ</span><output id="double-wavelength-value">550 nm</output><input id="double-wavelength" type="range" min="380" max="750" step="5" value="550"></label>
+            <label class="range-control" for="slit-separation"><span>双缝间距 d</span><output id="slit-separation-value">0.50 mm</output><input id="slit-separation" type="range" min="0.05" max="2" step="0.05" value="0.5"></label>
+            <label class="range-control" for="double-screen-distance"><span>屏距 L</span><output id="double-screen-distance-value">1.5 m</output><input id="double-screen-distance" type="range" min="0.1" max="10" step="0.1" value="1.5"></label>
             <div class="readout"><span>相邻亮纹间距 Δy</span><strong id="fringe-spacing">—</strong></div>
             <div class="readout emph"><span>中央亮纹级次</span><strong>m = 0</strong></div>
             <p class="interpretation">屏上曲线使用双点源干涉强度；可见范围随条纹间距自动缩放。</p>
@@ -139,9 +139,9 @@
           </div>
           <aside class="control-card" aria-label="单缝衍射参数">
             <h4>实验参数</h4>
-            <label class="range-control" for="single-wavelength"><span>波长 λ</span><output id="single-wavelength-value">550 nm</output><input id="single-wavelength" type="range" min="400" max="700" step="10" value="550"></label>
-            <label class="range-control" for="slit-width"><span>狭缝宽度 a</span><output id="slit-width-value">20 μm</output><input id="slit-width" type="range" min="5" max="80" step="1" value="20"></label>
-            <label class="range-control" for="single-screen-distance"><span>屏距 L</span><output id="single-screen-distance-value">1.5 m</output><input id="single-screen-distance" type="range" min="0.5" max="3" step="0.1" value="1.5"></label>
+            <label class="range-control" for="single-wavelength"><span>波长 λ</span><output id="single-wavelength-value">550 nm</output><input id="single-wavelength" type="range" min="380" max="750" step="5" value="550"></label>
+            <label class="range-control" for="slit-width"><span>狭缝宽度 a</span><output id="slit-width-value">20 μm</output><input id="slit-width" type="range" min="1" max="200" step="1" value="20"></label>
+            <label class="range-control" for="single-screen-distance"><span>屏距 L</span><output id="single-screen-distance-value">1.5 m</output><input id="single-screen-distance" type="range" min="0.1" max="10" step="0.1" value="1.5"></label>
             <div class="readout"><span>中央主极大宽度（近轴）</span><strong id="central-width">—</strong></div>
             <div class="readout emph"><span>第一级暗纹角度 |θ₁|</span><strong id="first-minimum">—</strong></div>
             <p class="interpretation">狭缝变窄时，中央亮纹展宽；波长越长，衍射角也越大。</p>

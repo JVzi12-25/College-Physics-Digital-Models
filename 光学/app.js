@@ -2,6 +2,7 @@ import {
   criticalAngle, doubleSlitFringeSpacing, doubleSlitIntensity, refract,
   singleSlitIntensity, singleSlitMinimaAngle, thinLens,
 } from "./physics.js";
+import { installRangeNumberInputs, syncRangeNumberInputs } from "./range-inputs.js";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -260,6 +261,7 @@ $$("[data-reset]").forEach((button) => button.addEventListener("click", () => {
   const panel = button.dataset.reset;
   Object.entries(defaults[panel]).forEach(([id, value]) => { $("#" + id).value = value; });
   updateByPanel[panel]();
+  syncRangeNumberInputs();
 }));
 
 let resizeFrame = 0;
@@ -272,3 +274,4 @@ window.addEventListener("resize", () => {
 });
 
 updateRefraction();
+installRangeNumberInputs();

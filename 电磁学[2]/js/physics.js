@@ -25,7 +25,8 @@ export function chargedParticleState({ particle, magneticField, speed, angleDeg,
 
   const angle = angleDeg * Math.PI / 180;
   const parallelSpeed = speed * Math.cos(angle);
-  const perpendicularSpeed = speed * Math.sin(angle);
+  const perpendicularComponent = Math.sin(angle);
+  const perpendicularSpeed = Math.abs(perpendicularComponent) < 1e-12 ? 0 : speed * perpendicularComponent;
   const angularFrequency = charge * magneticField / mass;
   const angularFrequencyMagnitude = Math.abs(angularFrequency);
   const period = angularFrequencyMagnitude === 0 ? Infinity : 2 * Math.PI / angularFrequencyMagnitude;
@@ -84,9 +85,13 @@ export function rotatingCoilState({ turns, magneticField, area, frequency, initi
   if (![turns, magneticField, area, frequency, initialAngleDeg, cycles].every(Number.isFinite) || turns < 0 || area < 0 || frequency < 0) return null;
   const angularFrequency = 2 * Math.PI * frequency;
   const angle = initialAngleDeg * Math.PI / 180 + 2 * Math.PI * cycles;
-  const fluxPerTurn = magneticField * area * Math.cos(angle);
+  const rawCosine = Math.cos(angle);
+  const rawSine = Math.sin(angle);
+  const cosine = Math.abs(rawCosine) < 1e-12 ? 0 : rawCosine;
+  const sine = Math.abs(rawSine) < 1e-12 ? 0 : rawSine;
+  const fluxPerTurn = magneticField * area * cosine;
   const fluxLinkage = turns * fluxPerTurn;
-  const emf = turns * magneticField * area * angularFrequency * Math.sin(angle);
+  const emf = turns * magneticField * area * angularFrequency * sine;
   return { angle, angularFrequency, time: frequency === 0 ? 0 : cycles / frequency, fluxPerTurn, fluxLinkage, emf };
 }
 

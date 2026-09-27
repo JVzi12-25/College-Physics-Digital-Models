@@ -1,5 +1,6 @@
 import { coulombForceOnFirst, electricFieldAt, electricPotentialAt, parallelPlateCapacitor, uniformChargedSphere, chargedCylindricalShell, infiniteChargedPlane, particleInUniformField, rcCircuit } from './physics.js';
 import { traceElectricFieldLines } from './field-lines.js';
+import { installRangeNumberInputs, syncRangeNumberInputs } from '../../光学/range-inputs.js';
 
 const $ = (id) => document.getElementById(id);
 const number = (value, digits = 2) => new Intl.NumberFormat('zh-CN', { maximumFractionDigits: digits }).format(value);
@@ -157,7 +158,9 @@ function contours(view) {
     for (let col = 0; col <= nx; col++) cells.push(electricPotentialAt(field.charges, toWorld({ x: col * step, y: row * step }, view)));
     values.push(cells);
   }
-  for (const level of [-1600, -1000, -600, -350, -150, 0, 150, 350, 600, 1000, 1600]) {
+  const maxChargeNc = Math.max(0, ...field.charges.map((charge) => Math.abs(charge.q) * 1e9));
+  const levelScale = Math.max(1, maxChargeNc / 5);
+  for (const level of [-1600, -1000, -600, -350, -150, 0, 150, 350, 600, 1000, 1600].map((value) => value * levelScale)) {
     ctx.strokeStyle = level === 0 ? '#f1d591' : level > 0 ? '#b79774' : '#6895b8';
     ctx.globalAlpha = level === 0 ? 0.82 : 0.52;
     ctx.lineWidth = level === 0 ? 1.7 : 1;
@@ -251,6 +254,7 @@ function drawField() {
   $('field-charge').disabled = !selected;
   $('remove-charge').disabled = !selected;
   $('field-description').textContent = !e ? '探针过于靠近电荷；请将探针移开。' : '电场方向为正试探电荷所受力的方向；沿等势线移动时电势保持不变。';
+  syncRangeNumberInputs();
 }
 
 bindDrag(fieldCanvas, (pointer) => {
@@ -310,7 +314,7 @@ function drawCapacitor() {
   const x2 = width / 2 + separation / 2;
   const top = (height - plateHeight) / 2;
   if (relativePermittivity > 1) {
-    ctx.fillStyle = `rgba(123, 221, 190, ${Math.min(0.25, 0.025 * relativePermittivity)})`;
+    ctx.fillStyle = `rgba(123, 221, 190, ${Math.min(0.24, 0.025 * Math.log1p(relativePermittivity))})`;
     ctx.fillRect(x1 + 7, top, x2 - x1 - 14, plateHeight);
     ctx.fillStyle = '#aad9c6'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`电介质 εᵣ = ${relativePermittivity.toFixed(1)}`, width / 2, top + plateHeight + 28);
   }
@@ -350,7 +354,7 @@ function drawGauss() {
   $('gauss-flux').textContent = `${number(result.flux)} N·m²/C`;
   $('gauss-description').textContent = qNc === 0 ? '总电荷为零，电场与电通量都为零。' : gaussianCm < sphereCm ? '高斯面位于球体内部；包围电荷随 r³ 增加。' : '高斯面已包围全部电荷；继续增大半径时，通量保持不变，表面电场减弱。';
   const center = { x: width / 2, y: height / 2 };
-  const scale = Math.min(width, height) * 0.39 / 15;
+  const scale = Math.min(width, height) * 0.39 / 30;
   const spherePx = sphereCm * scale;
   const gaussianPx = gaussianCm * scale;
   const sphereColor = qNc >= 0 ? '#ff8c7f' : '#6db8ef';
@@ -416,7 +420,7 @@ function drawCylinder() {
         : '高斯柱包围长度 L 内的全部圆柱面电荷；增大 r 会减弱该处电场，但通量不变；增大 L 会同比增大包围电荷和通量，不改变电场。';
 
   const center = { x: width / 2, y: height / 2 };
-  const scale = Math.min(width, height) * 0.39 / 12;
+  const scale = Math.min(width, height) * 0.39 / 30;
   const shellPx = radiusCm * scale;
   const gaussianPx = gaussianCm * scale;
   const shellColor = sigma > 0 ? '#ff8c7f' : sigma < 0 ? '#6db8ef' : '#a6b5c3';
@@ -450,10 +454,10 @@ function drawCylinder() {
 function drawCylinderSide({ sigma, radiusCm, gaussianCm, lengthCm }) {
   const { ctx, width, height } = dimensions(cylinderSideCanvas);
   const middle = height / 2;
-  const radiusScale = Math.min(height * 0.34, width * 0.24) / 12;
+  const radiusScale = Math.min(height * 0.34, width * 0.24) / 30;
   const shellHalfHeight = radiusCm * radiusScale;
   const gaussianHalfHeight = gaussianCm * radiusScale;
-  const gaussianLength = width * (0.3 + (lengthCm - 5) / 25 * 0.5);
+  const gaussianLength = width * (0.32 + (lengthCm - 1) / 99 * 0.55);
   const left = (width - gaussianLength) / 2;
   const right = width - left;
   const shellColor = sigma > 0 ? '#ff8c7f' : sigma < 0 ? '#6db8ef' : '#a6b5c3';
@@ -537,8 +541,9 @@ function drawPlane() {
     : '改变柱盒半高 h 不影响电场或通量；增大端盖面积 A 只会同比增大包围电荷和总通量。';
 
   const middle = height / 2;
-  const boxHalfWidth = width * (0.18 + 0.00024 * areaCm2);
-  const boxHalfHeight = 18 + (halfHeightCm - 1) / 9 * Math.min(height * 0.27, 90);
+  const areaFraction = Math.sqrt(Math.max(0, (areaCm2 - 10) / (5000 - 10)));
+  const boxHalfWidth = width * (0.18 + 0.24 * areaFraction);
+  const boxHalfHeight = 18 + (halfHeightCm - 0.2) / (30 - 0.2) * Math.min(height * 0.27, 90);
   const left = width / 2 - boxHalfWidth, right = width / 2 + boxHalfWidth;
   ctx.fillStyle = '#f5ce7413'; ctx.fillRect(left, middle - boxHalfHeight, right - left, 2 * boxHalfHeight);
   ctx.strokeStyle = '#f5ce74'; ctx.lineWidth = 2.5; ctx.setLineDash([8, 6]);
@@ -599,7 +604,7 @@ function drawParticle(progress = 1) {
   $('particle-deflection').textContent = `${number(Math.abs(model.finalY) * 1000)} mm`;
   $('particle-outcome').textContent = model.hitPlate ? `粒子在离入口 ${number(model.finalX * 100, 1)} cm 处撞上${model.finalY > 0 ? '上' : '下'}极板。` : `粒子从右端射出，向${model.finalY > 0 ? '上' : model.finalY < 0 ? '下' : '前'}偏移 ${number(Math.abs(model.finalY) * 1000)} mm。`;
   const left = 44, right = width - 24, middle = height / 2;
-  const gapPx = Math.min(height * 0.65, 70 + (gapCm - 2) * height * 0.038);
+  const gapPx = Math.min(height * 0.65, 42 + (gapCm - 0.5) / 19.5 * height * 0.42);
   const upper = middle - gapPx / 2, lower = middle + gapPx / 2;
   ctx.fillStyle = '#ff8c7f'; ctx.shadowColor = '#ff8c7f'; ctx.shadowBlur = 12; ctx.fillRect(left, upper - 7, right - left, 10);
   ctx.fillStyle = '#6db8ef'; ctx.shadowColor = '#6db8ef'; ctx.fillRect(left, lower - 3, right - left, 10); ctx.shadowBlur = 0;
@@ -653,11 +658,12 @@ function drawRc() {
   $('rc-voltage-value').textContent = `${voltage} V`;
   $('rc-resistance-value').textContent = `${resistanceK} kΩ`;
   $('rc-capacitance-value').textContent = `${capacitanceMicro} µF`;
-  $('rc-time-value').textContent = `${time.toFixed(1)} s`;
+  $('rc-time-value').textContent = `${time.toFixed(time < 10 ? 1 : 0)} s`;
   $('rc-tau').textContent = `${number(result.tau, 3)} s`;
   $('rc-capacitor-voltage').textContent = `${number(result.capacitorVoltage)} V`;
   $('rc-charge').textContent = quantity(result.charge, 'C');
   $('rc-current').textContent = quantity(result.current, 'A');
+  const graphTimeMax = Math.max(10, result.tau * 5, time);
   const left = 48, right = width - 22, top = 29, bottom = height - 43;
   ctx.strokeStyle = '#2b4758'; ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
@@ -670,19 +676,23 @@ function drawRc() {
   }
   ctx.fillStyle = '#95acb9'; ctx.font = '11px sans-serif';
   ctx.fillText('1.0', 9, top + 4); ctx.fillText('0.5', 9, (top + bottom) / 2 + 4); ctx.fillText('0', 29, bottom + 4);
-  ctx.fillText('0 s', left - 9, bottom + 23); ctx.fillText('5 s', (left + right) / 2 - 10, bottom + 23); ctx.fillText('10 s', right - 23, bottom + 23);
-  const graphPoint = (t, normalized) => ({ x: left + t / 10 * (right - left), y: bottom - normalized * (bottom - top) });
+  const midpoint = graphTimeMax / 2;
+  const timeDigits = graphTimeMax < 10 ? 1 : 0;
+  ctx.textAlign = 'left'; ctx.fillText('0 s', left - 9, bottom + 23);
+  ctx.textAlign = 'center'; ctx.fillText(`${number(midpoint, timeDigits)} s`, (left + right) / 2, bottom + 23);
+  ctx.textAlign = 'right'; ctx.fillText(`${number(graphTimeMax, timeDigits)} s`, right + 8, bottom + 23); ctx.textAlign = 'left';
+  const graphPoint = (t, normalized) => ({ x: left + t / graphTimeMax * (right - left), y: bottom - normalized * (bottom - top) });
   for (const [key, color, dashed] of [['normalizedVoltage', '#ff9a89', false], ['normalizedCurrent', '#89dfc3', true]]) {
     ctx.strokeStyle = color; ctx.lineWidth = 2.6; ctx.setLineDash(dashed ? [6, 5] : []); ctx.beginPath();
     for (let index = 0; index <= 160; index++) {
-      const t = index / 16;
+      const t = graphTimeMax * index / 160;
       const state = rcCircuit({ ...args, time: t });
       const point = graphPoint(t, state[key]);
       if (index === 0) ctx.moveTo(point.x, point.y); else ctx.lineTo(point.x, point.y);
     }
     ctx.stroke(); ctx.setLineDash([]);
   }
-  const markerX = left + time / 10 * (right - left);
+  const markerX = left + time / graphTimeMax * (right - left);
   ctx.strokeStyle = '#f3d487'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(markerX, top); ctx.lineTo(markerX, bottom); ctx.stroke(); ctx.setLineDash([]);
   for (const [key, color] of [['normalizedVoltage', '#ff9a89'], ['normalizedCurrent', '#89dfc3']]) {
@@ -735,3 +745,4 @@ modelPanels.forEach((panel) => {
 const resizeObserver = new ResizeObserver(() => { const active = document.querySelector('.model-panel.is-active'); if (active) redraw[active.id](); });
 document.querySelectorAll('.canvas-card').forEach((card) => resizeObserver.observe(card));
 drawCoulomb();
+installRangeNumberInputs();
