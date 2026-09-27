@@ -34,7 +34,7 @@ jobs:
           cp -R '电磁学[1]/js' '_site/电磁学[1]/'
           cp '电磁学[2]/index.html' '电磁学[2]/styles.css' '_site/电磁学[2]/'
           cp -R '电磁学[2]/js' '_site/电磁学[2]/'
-          cp '光学/index.html' '光学/styles.css' '光学/app.js' '光学/physics.js' '_site/光学/'
+          cp '光学/index.html' '光学/styles.css' '光学/app.js' '光学/physics.js' '光学/range-inputs.js' '_site/光学/'
           cp '近代物理学/index.html' '_site/近代物理学/'
       - name: Upload static site
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
