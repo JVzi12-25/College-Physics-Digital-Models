@@ -160,6 +160,9 @@ function drawCoil() {
   const view = metrics($('induction-canvas')); if (view.width < 2 || view.height < 2) return;
   const { ctx, width, height } = view; background(ctx, width, height);
   const cx = Math.max(80, width * 0.17); const cy = height * 0.47; const state = coilState();
+  const fluxAmplitude = Math.max(1e-15, coil.turns * coil.b * coil.area);
+  const emfAmplitude = Math.max(1e-15, fluxAmplitude * 2 * Math.PI * coil.frequency);
+  text(ctx, `NΦ₀ ${quantity(coil.b === 0 ? 0 : fluxAmplitude, 'Wb', 2)} · ε₀ ${quantity(coil.b === 0 ? 0 : emfAmplitude, 'V', 2)}`, width - 12, 20, '#f5ce74', 'right', 10, '700');
   for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) {
     const x = cx + i * 23; const y = cy + j * 23;
     if (Math.hypot(x - cx, y - cy) < 14) continue;
@@ -176,8 +179,6 @@ function drawCoil() {
   text(ctx, 'B ⊗', cx, cy - 83, '#90b1b0', 'center', 12);
   const graphX = width * 0.35; const graphW = width - graphX - 27; const graphH = Math.max(48, (height - 82) / 2 - 14);
   const rect1 = { x: graphX, y: 44, w: graphW, h: graphH }; const rect2 = { x: graphX, y: 54 + graphH, w: graphW, h: graphH };
-  const fluxAmplitude = Math.max(1e-15, coil.turns * coil.b * coil.area);
-  const emfAmplitude = Math.max(1e-15, fluxAmplitude * 2 * Math.PI * coil.frequency);
   axes(ctx, rect1, { xMin: 0, xMax: 2, yMin: -1.15, yMax: 1.15, title: '磁通链 / 峰值', xLabel: '旋转周期', yLabel: 'NΦ / NΦ₀' });
   axes(ctx, rect2, { xMin: 0, xMax: 2, yMin: -1.15, yMax: 1.15, title: '感应电动势 / 峰值', xLabel: '旋转周期', yLabel: 'ε / ε₀' });
   const fluxPoints = []; const emfPoints = [];
@@ -230,11 +231,16 @@ function drawRod() {
   ctx.lineCap = 'butt'; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(rodX, railTop, 4, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(rodX, railBottom, 4, 0, Math.PI * 2); ctx.fill();
   const state = motionalEmfState({ magneticField: rod.direction * rod.b, length: rod.length, velocity: rod.velocity, resistance: rod.resistance });
   const topPositive = state.emf >= 0; text(ctx, topPositive ? '＋' : '−', rodX + 11, railTop + 4, topPositive ? '#ffaaa0' : '#9bc9ef', 'left', 13, '700'); text(ctx, topPositive ? '−' : '＋', rodX + 11, railBottom + 4, topPositive ? '#9bc9ef' : '#ffaaa0', 'left', 13, '700');
-  if (Math.abs(state.current) > 0) arrow(ctx, rodX, state.current > 0 ? railBottom - 13 : railTop + 13, rodX, state.current > 0 ? railTop + 13 : railBottom - 13, '#ffb090', 2, 7);
-  if (Math.abs(rod.velocity) > 0.01) arrow(ctx, rodX, railTop - 30, rodX + Math.sign(rod.velocity) * 54, railTop - 30, '#88e5c9', 2, 8);
+  if (Math.abs(state.current) > 0) arrow(ctx, rodX, state.current > 0 ? railBottom - 13 : railTop + 13, rodX, state.current > 0 ? railTop + 13 : railBottom - 13, '#ffb090', 1.5 + Math.min(1, Math.abs(state.current) / 2) * 2.5, 7);
+  if (Math.abs(rod.velocity) > 0.01) {
+    const velocityArrowLength = 20 + Math.min(2, Math.abs(rod.velocity)) * 24;
+    arrow(ctx, rodX, railTop - 30, rodX + Math.sign(rod.velocity) * velocityArrowLength, railTop - 30, '#88e5c9', 2, 8);
+  }
   text(ctx, `v ${signed(rod.velocity, 2)} m/s`, rodX, railTop - 42, '#aaf2dd', 'center', 11);
   arrow(ctx, x1 + 4, railBottom + 34, x1 + 112, railBottom + 34, '#d3e2e5', 1.5, 7); text(ctx, 'x', x1 + 118, railBottom + 38, '#c2d6df');
   text(ctx, `ε ${signed(state.emf, 3)} V`, width - 34, 28, '#f5ce74', 'right', 12, '700');
+  text(ctx, `B ${fmt(rod.b, 2)} T · L ${fmt(rod.length, 2)} m · R ${fmt(rod.resistance, 1)} Ω`, width - 34, 46, '#b7ccd3', 'right', 10);
+  text(ctx, `I ${quantity(state.current, 'A', 2)}`, width - 34, 61, '#ffb090', 'right', 10, '700');
   $('rod-b-value').textContent = `${fmt(rod.b, 2)} T`; $('rod-length-value').textContent = `${fmt(rod.length, 2)} m`;
   $('rod-velocity-value').textContent = `${signed(rod.velocity, 2)} m/s`; $('rod-resistance-value').textContent = `${fmt(rod.resistance, 1)} Ω`;
   $('rod-position-value').textContent = `${fmt(rod.position, 2)} m`; $('rod-position').value = String(rod.position);
@@ -286,6 +292,8 @@ function drawRlc() {
   arrow(ctx, left + 22, railY - 13, left + 65, railY - 13, '#88e5c9', 1.7, 6); text(ctx, 'i(t)', left + 44, railY - 22, '#aaf2dd', 'center', 10);
 
   const tMax = rlcTimeMax(); const t = rlc.progress * tMax; const state = seriesRlc({ inductance: rlc.inductance, capacitance: rlc.capacitance, resistance: rlc.resistance, initialVoltage: rlc.voltage, time: t });
+  text(ctx, `q₀ ${quantity(state.initialCharge, 'C', 2)} · U₀ ${quantity(state.initialEnergy, 'J', 2)}`, width - 12, 18, '#f5ce74', 'right', 10, '700');
+  text(ctx, `观察窗 0–${quantity(tMax, 's', 2)} · ${state.regime}`, width - 12, 34, '#b7ccd3', 'right', 10);
   const chartX = 42; const chartW = width - 72; const chartH = Math.max(38, (height - height * 0.42 - 40) / 2 - 13);
   const chargeRect = { x: chartX, y: height * 0.46, w: chartW, h: chartH };
   const energyRect = { x: chartX, y: height * 0.46 + chartH + 31, w: chartW, h: chartH };
@@ -343,21 +351,25 @@ function drawWave() {
   const y1 = height * 0.31; const y2 = height * 0.72; const amp = Math.min(height * 0.14, 48);
   ctx.strokeStyle = '#395568'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(chartX, y1); ctx.lineTo(width - 18, y1); ctx.moveTo(chartX, y2); ctx.lineTo(width - 18, y2); ctx.stroke();
   text(ctx, 'E / E₀', chartX, y1 - amp - 8, '#dceae9', 'left', 11, '700'); text(ctx, 'cB / E₀', chartX, y2 - amp - 8, '#dceae9', 'left', 11, '700');
+  const displayLength = 0.6;
   const e = []; const b = [];
-  for (let i = 0; i <= 180; i++) {
-    const u = i / 180; const phase = 4 * Math.PI * u - state.phase;
+  for (let i = 0; i <= 360; i++) {
+    const u = i / 360; const phase = state.waveNumber * u * displayLength - state.phase;
     e.push({ x: u, y: Math.cos(phase) }); b.push({ x: u, y: Math.cos(phase) });
   }
   for (const points of [e, b]) {
     ctx.beginPath(); points.forEach((p, i) => { const x = chartX + p.x * chartW; const y = (points === e ? y1 : y2) - p.y * amp; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
     ctx.strokeStyle = points === e ? '#83bfff' : '#88e5c9'; ctx.lineWidth = 2.4; ctx.stroke();
   }
-  const markX = chartX + ((wave.phaseCycles % 1) * chartW); ctx.strokeStyle = '#f5ce74'; ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.moveTo(markX, y1 - amp - 4); ctx.lineTo(markX, y2 + amp + 7); ctx.stroke(); ctx.setLineDash([]);
-  text(ctx, `相位 ${fmt(wave.phaseCycles, 2)} 周期`, chartX, height - 12, '#9bb0bd');
+  const markX = chartX + (((wave.phaseCycles * state.wavelength) % displayLength) / displayLength) * chartW; ctx.strokeStyle = '#f5ce74'; ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.moveTo(markX, y1 - amp - 4); ctx.lineTo(markX, y2 + amp + 7); ctx.stroke(); ctx.setLineDash([]);
+  text(ctx, `相位 ${fmt(wave.phaseCycles, 2)} 周期 · 显示范围 ${fmt(displayLength, 2)} m`, chartX, height - 12, '#9bb0bd');
+  text(ctx, `f ${fmt(wave.frequency / 1e9, 2)} GHz · λ ${quantity(state.wavelength, 'm', 2)}`, width - 12, 18, '#f5ce74', 'right', 10, '700');
+  text(ctx, `E₀ ${quantity(wave.amplitude, 'V/m', 2)} · B₀ ${quantity(state.magneticAmplitude, 'T', 2)}`, width - 12, 33, '#b7ccd3', 'right', 10);
   const cx = insetW / 2 + 6; const cy = height * 0.49; const radius = Math.min(32, height * 0.13); const angle = wave.polarization * Math.PI / 180;
+  const vectorLength = radius * (0.28 + 0.72 * Math.min(1, wave.amplitude / 5));
   ctx.strokeStyle = '#526d7a'; ctx.lineWidth = 1; ctx.strokeRect(cx - radius, cy - radius, radius * 2, radius * 2);
-  arrow(ctx, cx, cy, cx + Math.sin(angle) * radius * 0.82, cy - Math.cos(angle) * radius * 0.82, '#83bfff', 2.5, 7);
-  arrow(ctx, cx, cy, cx + Math.cos(angle) * radius * 0.82, cy + Math.sin(angle) * radius * 0.82, '#88e5c9', 2.5, 7);
+  arrow(ctx, cx, cy, cx + Math.sin(angle) * vectorLength, cy - Math.cos(angle) * vectorLength, '#83bfff', 2.5, 7);
+  arrow(ctx, cx, cy, cx + Math.cos(angle) * vectorLength, cy + Math.sin(angle) * vectorLength, '#88e5c9', 2.5, 7);
   text(ctx, 'E', cx + Math.sin(angle) * radius, cy - Math.cos(angle) * radius - 4, '#a5d7ff', 'center', 11, '700');
   text(ctx, 'B', cx + Math.cos(angle) * radius + 2, cy + Math.sin(angle) * radius + 7, '#aaf2dd', 'center', 11, '700');
   arrow(ctx, cx - radius, cy + radius + 21, cx + radius, cy + radius + 21, '#f5ce74', 1.7, 6); text(ctx, 'k', cx, cy + radius + 36, '#f5ce74', 'center', 10);

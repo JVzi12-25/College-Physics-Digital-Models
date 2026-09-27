@@ -112,18 +112,19 @@ function drawWire(view) {
   const { ctx, width, height } = view;
   const cx = width / 2; const cy = height / 2;
   const maxRadius = Math.min(width, height) * 0.45;
-  ctx.save(); ctx.strokeStyle = '#7ce0c3'; ctx.globalAlpha = magnetic.current === 0 ? 0.2 : 0.5; ctx.lineWidth = 1.7;
-  for (let index = 1; index <= 6; index++) {
-    const radius = maxRadius * index / 6;
+  const currentMagnitude = Math.abs(magnetic.current);
+  const fieldLines = currentMagnitude === 0 ? 0 : Math.max(1, Math.round(currentMagnitude));
+  const strength = currentMagnitude / 10;
+  ctx.save(); ctx.strokeStyle = '#7ce0c3'; ctx.globalAlpha = 0.24 + strength * 0.48; ctx.lineWidth = 1.1 + strength * 1.1;
+  for (let index = 1; index <= fieldLines; index++) {
+    const radius = maxRadius * index / fieldLines;
     ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.stroke();
-    if (magnetic.current !== 0) {
-      const angle = 0.55 + (index % 2) * 1.55;
-      const endAngle = angle + Math.sign(magnetic.current) * 0.2;
-      arrow(ctx,
-        { x: cx + radius * Math.cos(angle), y: cy - radius * Math.sin(angle) },
-        { x: cx + radius * Math.cos(endAngle), y: cy - radius * Math.sin(endAngle) },
-        '#94f0d0', 1.7, 7);
-    }
+    const angle = 0.55 + (index % 2) * 1.55;
+    const endAngle = angle + Math.sign(magnetic.current) * 0.2;
+    arrow(ctx,
+      { x: cx + radius * Math.cos(angle), y: cy - radius * Math.sin(angle) },
+      { x: cx + radius * Math.cos(endAngle), y: cy - radius * Math.sin(endAngle) },
+      '#94f0d0', 1.5 + strength, 7);
   }
   ctx.restore();
   ctx.fillStyle = '#233d4c'; ctx.beginPath(); ctx.arc(cx, cy, 20, 0, Math.PI * 2); ctx.fill();
@@ -151,10 +152,13 @@ function drawLoop(view) {
   const scale = Math.min(width / 1.65, height / 0.8);
   const radiusPx = magnetic.radius * scale;
   const sign = Math.sign(magnetic.current);
-  for (let index = 1; index <= 4 && magnetic.current !== 0; index++) {
-    const span = radiusPx * (1.45 + index * 0.48) + 12;
-    const rise = radiusPx * (0.9 + index * 0.28) + 9;
-    ctx.save(); ctx.strokeStyle = '#7ce0c3'; ctx.globalAlpha = 0.28 + index * 0.08; ctx.lineWidth = 1.5;
+  const currentMagnitude = Math.abs(magnetic.current);
+  const fieldLines = currentMagnitude === 0 ? 0 : Math.max(1, Math.round(currentMagnitude));
+  for (let index = 1; index <= fieldLines; index++) {
+    const fraction = index / fieldLines;
+    const span = radiusPx * (1.45 + fraction * 1.92) + 12;
+    const rise = radiusPx * (0.9 + fraction * 1.12) + 9;
+    ctx.save(); ctx.strokeStyle = '#7ce0c3'; ctx.globalAlpha = 0.28 + 0.42 * currentMagnitude / 10; ctx.lineWidth = 1.1 + currentMagnitude / 10;
     ctx.beginPath(); ctx.ellipse(cx, cy, span, rise, 0, 0, Math.PI * 2); ctx.stroke();
     const angle = sign >= 0 ? -0.55 : 0.55;
     const start = { x: cx + span * Math.cos(angle), y: cy + rise * Math.sin(angle) };
@@ -206,8 +210,9 @@ function drawSolenoid(view) {
   if (magnetic.current !== 0) {
     const sign = Math.sign(magnetic.current);
     ctx.save(); ctx.strokeStyle = '#81e1c3'; ctx.fillStyle = '#a7f1d7'; ctx.globalAlpha = 0.86;
-    for (let index = 1; index <= 5; index++) {
-      const y = box.top + (box.bottom - box.top) * index / 6;
+    const fieldArrows = Math.max(1, Math.round(Math.abs(magnetic.current) / 2));
+    for (let index = 1; index <= fieldArrows; index++) {
+      const y = box.top + (box.bottom - box.top) * index / (fieldArrows + 1);
       const from = sign > 0 ? { x: box.left + 18, y } : { x: box.right - 18, y };
       const to = sign > 0 ? { x: box.right - 18, y } : { x: box.left + 18, y };
       arrow(ctx, from, to, '#98efd2', 1.8, 7);
@@ -372,6 +377,11 @@ function drawParticle() {
   ctx.strokeStyle = '#f4f8fa'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(particlePoint.x, particlePoint.y, 11, 0, Math.PI * 2); ctx.stroke();
   label(ctx, particle.kind === 'electron' ? 'e⁻' : 'p⁺', particlePoint.x + 13, particlePoint.y - 12, '#e5edf2');
   label(ctx, '起点', axisStart.x - 3, axisStart.y + 22, '#9aafba');
+  ctx.save(); ctx.fillStyle = '#f5ce74'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText(`r = ${currentState.radius === Infinity ? '∞（B = 0）' : quantity(currentState.radius, 'm')}`, width - 12, 18);
+  ctx.fillStyle = '#c2d6df'; ctx.font = '10px sans-serif';
+  ctx.fillText(`T = ${currentState.period === Infinity ? '∞（B = 0）' : quantity(currentState.period, 's')}`, width - 12, 33);
+  ctx.restore();
 
   const cycleText = `${number(particle.cycles, 2)} 周期`;
   $('particle-time-value').textContent = cycleText;
