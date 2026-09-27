@@ -1,0 +1,8 @@
+{
+  "name": "college-physics-optics",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}

@@ -1,5 +1,7 @@
 # 电磁学 [1]：电场与电路基础
 
+线上页面：[打开电磁学 [1] 交互实验室](https://jvzi12-25.github.io/College-Physics-Digital-Models/%E7%94%B5%E7%A3%81%E5%AD%A6%5B1%5D/index.html)。
+
 已完成的网页端交互模型：
 
 1. **库仑力**：拖动两个点电荷，改变电荷量，观察距离、方向与受力的关系。

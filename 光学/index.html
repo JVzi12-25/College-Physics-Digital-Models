@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d1726">
+  <meta name="description" content="交互探索反射与折射、透镜成像、双缝干涉和单缝衍射。">
+  <title>光学 · 大学物理交互模型</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../site.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <details class="project-switcher">
+        <summary class="brand-mark" aria-label="切换大章节" title="切换大章节">ϵ</summary>
+        <span class="chapter-switcher-hint" aria-hidden="true">切换大章节</span>
+        <nav class="project-menu" aria-label="项目页面">
+          <span class="project-menu-heading">选择项目包</span>
+          <a class="project-menu-home" href="../index.html"><span>⌂</span> 项目首页</a>
+          <a href="../电磁学[1]/index.html"><span>01</span> 电磁学 [1]<small>已有模型</small></a>
+          <a href="../电磁学[2]/index.html"><span>02</span> 电磁学 [2]<small>已有模型</small></a>
+          <a href="index.html" aria-label="光学，当前页面" aria-current="page"><span>03</span> 光学<small>当前页面</small></a>
+          <a href="../近代物理学/index.html"><span>04</span> 近代物理学<small>待建设</small></a>
+        </nav>
+      </details>
+      <div class="brand-copy"><span class="eyebrow">大学物理 · 交互模型</span><h1>光学</h1></div>
+      <div class="header-note">几何光学 · 波动光学</div>
+      <div class="github-watermark" aria-label="GitHub 用户名 JVzi12-25"><span class="github-watermark-label">GITHUB</span><span class="github-watermark-name">@JVzi12-25</span></div>
+    </header>
+
+    <main>
+      <div class="intro">
+        <div>
+          <p class="section-kicker">INTERACTIVE LAB / 03</p>
+          <h2>让光路与波纹，<br><em>把成像和干涉讲清楚。</em></h2>
+          <p>调整介质、物距与波长，在光线图和强度分布之间来回验证光学规律。</p>
+        </div>
+        <div class="intro-number" aria-hidden="true">04<span>个交互模型</span></div>
+      </div>
+
+      <div class="model-nav-shell">
+        <div class="model-nav-meta"><strong>选择模型</strong><span>点击标签切换模型</span></div>
+        <nav class="model-nav" aria-label="选择光学模型">
+          <button class="nav-tab is-active" type="button" data-target="refraction" aria-current="page"><span>01</span> 反射与折射</button>
+          <button class="nav-tab" type="button" data-target="lens"><span>02</span> 薄透镜成像</button>
+          <button class="nav-tab" type="button" data-target="double-slit"><span>03</span> 双缝干涉</button>
+          <button class="nav-tab" type="button" data-target="single-slit"><span>04</span> 单缝衍射</button>
+        </nav>
+      </div>
+
+      <section class="model-panel is-active" id="refraction" aria-labelledby="refraction-title">
+        <div class="model-heading">
+          <div><p class="section-kicker">MODEL 01 / REFLECTION &amp; REFRACTION</p><h3 id="refraction-title">光线如何跨越介质边界？</h3><p>调整入射角和折射率，观察反射、折射与全反射的条件。</p></div>
+          <div class="formula">n₁ sin θ₁ = n₂ sin θ₂</div>
+        </div>
+        <div class="workspace">
+          <div class="canvas-card">
+            <div class="canvas-topline"><span class="live-dot"></span> 平面介质边界 <span class="canvas-hint">角度相对法线测量</span></div>
+            <canvas id="refraction-canvas" aria-label="入射光、反射光、折射光和介质边界示意图"></canvas>
+            <div class="canvas-footer"><span><i class="legend-field"></i> 入射光</span><span><i class="legend-probe"></i> 反射光</span><span><i class="legend-particle"></i> 折射光</span></div>
+          </div>
+          <aside class="control-card" aria-label="反射和折射参数">
+            <h4>实验参数</h4>
+            <label class="range-control" for="n1"><span>介质 1 折射率 n₁</span><output id="n1-value">1.00</output><input id="n1" type="range" min="1" max="2.2" step="0.01" value="1"></label>
+            <label class="range-control" for="n2"><span>介质 2 折射率 n₂</span><output id="n2-value">1.50</output><input id="n2" type="range" min="1" max="2.2" step="0.01" value="1.5"></label>
+            <label class="range-control" for="incident-angle"><span>入射角 θ₁</span><output id="incident-angle-value">30°</output><input id="incident-angle" type="range" min="0" max="89" step="1" value="30"></label>
+            <div class="readout"><span>折射角 θ₂</span><strong id="refracted-angle">—</strong></div>
+            <div class="readout emph"><span>临界角 θc</span><strong id="critical-angle">不存在</strong></div>
+            <p class="interpretation" id="refraction-status" aria-live="polite">—</p>
+            <button class="secondary-button" type="button" data-reset="refraction">恢复默认值</button>
+          </aside>
+        </div>
+        <p class="model-note"><strong>模型条件</strong> 边界为平面，介质均匀、各向同性且透明；角度从法线量起。全反射只可能发生在 n₁ &gt; n₂ 且 θ₁ &gt; θc 时。</p>
+      </section>
+
+      <section class="model-panel" id="lens" aria-labelledby="lens-title" hidden>
+        <div class="model-heading">
+          <div><p class="section-kicker">MODEL 02 / THIN LENS</p><h3 id="lens-title">物体移动时，像如何变化？</h3><p>拖动物距滑块，比较凸透镜和凹透镜的像距、正倒与放大率。</p></div>
+          <div class="formula">1/f = 1/s + 1/s′　　m = −s′/s</div>
+        </div>
+        <div class="workspace">
+          <div class="canvas-card">
+            <div class="canvas-topline"><span class="live-dot"></span> 薄透镜主光线图 <span class="canvas-hint">光线仅作几何示意</span></div>
+            <canvas id="lens-canvas" aria-label="物体、薄透镜、焦点、主光线和像的示意图"></canvas>
+            <div class="canvas-footer"><span><i class="legend-field"></i> 主光线</span><span><i class="legend-probe"></i> 物体</span><span><i class="legend-particle"></i> 像</span></div>
+          </div>
+          <aside class="control-card" aria-label="薄透镜参数">
+            <h4>实验参数</h4>
+            <label class="select-control" for="lens-kind"><span>透镜类型</span><select id="lens-kind"><option value="converging">凸透镜（会聚）</option><option value="diverging">凹透镜（发散）</option></select></label>
+            <label class="range-control" for="focal-length"><span>焦距 |f|</span><output id="focal-length-value">20 cm</output><input id="focal-length" type="range" min="5" max="40" step="1" value="20"></label>
+            <label class="range-control" for="object-distance"><span>物距 s</span><output id="object-distance-value">35 cm</output><input id="object-distance" type="range" min="5" max="100" step="1" value="35"></label>
+            <label class="range-control" for="object-height"><span>物高 h</span><output id="object-height-value">8 cm</output><input id="object-height" type="range" min="2" max="12" step="1" value="8"></label>
+            <div class="readout"><span>像距 s′</span><strong id="image-distance">—</strong></div>
+            <div class="readout emph"><span>放大率 m · 像的性质</span><strong id="magnification">—</strong></div>
+            <p class="interpretation" id="lens-status" aria-live="polite">—</p>
+            <button class="secondary-button" type="button" data-reset="lens">恢复默认值</button>
+          </aside>
+        </div>
+        <p class="model-note"><strong>模型条件</strong> 薄透镜置于空气中，使用近轴光线和理想薄透镜公式；焦距按会聚透镜为正、发散透镜为负。物体恰在焦点时，像在无穷远处。</p>
+      </section>
+
+      <section class="model-panel" id="double-slit" aria-labelledby="double-slit-title" hidden>
+        <div class="model-heading">
+          <div><p class="section-kicker">MODEL 03 / YOUNG’S DOUBLE SLIT</p><h3 id="double-slit-title">两束光如何形成明暗条纹？</h3><p>改变波长、缝距和屏距，观察屏上光强分布与相邻亮纹间距。</p></div>
+          <div class="formula">Δℓ = d sin θ　　Δy ≈ λL/d</div>
+        </div>
+        <div class="workspace">
+          <div class="canvas-card">
+            <div class="canvas-topline"><span class="live-dot"></span> 双缝与屏上强度分布 <span class="canvas-hint">亮度按归一化强度显示</span></div>
+            <canvas id="double-slit-canvas" aria-label="双缝波源、干涉条纹和屏上归一化光强曲线"></canvas>
+            <div class="canvas-footer"><span>明纹：d sin θ = mλ</span><span>暗纹：d sin θ = (m + ½)λ</span></div>
+          </div>
+          <aside class="control-card" aria-label="双缝干涉参数">
+            <h4>实验参数</h4>
+            <label class="range-control" for="double-wavelength"><span>波长 λ</span><output id="double-wavelength-value">550 nm</output><input id="double-wavelength" type="range" min="400" max="700" step="10" value="550"></label>
+            <label class="range-control" for="slit-separation"><span>双缝间距 d</span><output id="slit-separation-value">0.50 mm</output><input id="slit-separation" type="range" min="0.2" max="1" step="0.05" value="0.5"></label>
+            <label class="range-control" for="double-screen-distance"><span>屏距 L</span><output id="double-screen-distance-value">1.5 m</output><input id="double-screen-distance" type="range" min="0.5" max="3" step="0.1" value="1.5"></label>
+            <div class="readout"><span>相邻亮纹间距 Δy</span><strong id="fringe-spacing">—</strong></div>
+            <div class="readout emph"><span>中央亮纹级次</span><strong>m = 0</strong></div>
+            <p class="interpretation">屏上曲线使用双点源干涉强度；可见范围随条纹间距自动缩放。</p>
+            <button class="secondary-button" type="button" data-reset="double-slit">恢复默认值</button>
+          </aside>
+        </div>
+        <p class="model-note"><strong>模型条件</strong> 两缝为相干、同频、等强点光源，忽略单缝衍射包络。条纹间距采用小角度近似；屏上强度按实际观察角计算。</p>
+      </section>
+
+      <section class="model-panel" id="single-slit" aria-labelledby="single-slit-title" hidden>
+        <div class="model-heading">
+          <div><p class="section-kicker">MODEL 04 / SINGLE-SLIT DIFFRACTION</p><h3 id="single-slit-title">狭缝宽度如何改变中央亮纹？</h3><p>调节狭缝宽度和波长，比较中央主极大与旁瓣的宽度和强度。</p></div>
+          <div class="formula">I(θ) = I₀ (sin β / β)²　　β = πa sin θ/λ</div>
+        </div>
+        <div class="workspace">
+          <div class="canvas-card">
+            <div class="canvas-topline"><span class="live-dot"></span> 单缝与衍射强度分布 <span class="canvas-hint">中央光强取极限值 I/I₀ = 1</span></div>
+            <canvas id="single-slit-canvas" aria-label="单缝衍射图样和归一化光强曲线"></canvas>
+            <div class="canvas-footer"><span>暗纹：a sin θ = mλ，m = ±1, ±2, …</span><span>中央主极大位于 θ = 0</span></div>
+          </div>
+          <aside class="control-card" aria-label="单缝衍射参数">
+            <h4>实验参数</h4>
+            <label class="range-control" for="single-wavelength"><span>波长 λ</span><output id="single-wavelength-value">550 nm</output><input id="single-wavelength" type="range" min="400" max="700" step="10" value="550"></label>
+            <label class="range-control" for="slit-width"><span>狭缝宽度 a</span><output id="slit-width-value">20 μm</output><input id="slit-width" type="range" min="5" max="80" step="1" value="20"></label>
+            <label class="range-control" for="single-screen-distance"><span>屏距 L</span><output id="single-screen-distance-value">1.5 m</output><input id="single-screen-distance" type="range" min="0.5" max="3" step="0.1" value="1.5"></label>
+            <div class="readout"><span>中央主极大宽度（近轴）</span><strong id="central-width">—</strong></div>
+            <div class="readout emph"><span>第一级暗纹角度 |θ₁|</span><strong id="first-minimum">—</strong></div>
+            <p class="interpretation">狭缝变窄时，中央亮纹展宽；波长越长，衍射角也越大。</p>
+            <button class="secondary-button" type="button" data-reset="single-slit">恢复默认值</button>
+          </aside>
+        </div>
+        <p class="model-note"><strong>模型条件</strong> 单色平面波垂直入射于理想单缝，采用夫琅禾费远场模型；中央宽度用小角度近似 2λL/a，强度曲线用精确观察角计算。</p>
+      </section>
+    </main>
+    <footer class="site-footer"><span>COLLEGE PHYSICS DIGITAL MODELS</span><span>光学 · 几何光学与波动光学</span></footer>
+  </div>
+</body>
+</html>

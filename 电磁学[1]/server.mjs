@@ -13,13 +13,10 @@ const types = {
 createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
-    if (pathname === '/') {
-      response.writeHead(302, { Location: encodeURI('/电磁学[1]/index.html') }).end();
-      return;
-    }
-    if (pathname === '/site.css') {
-      const data = await readFile(resolve(root, 'site.css'));
-      response.writeHead(200, { 'Content-Type': types['.css'] }).end(data);
+    if (pathname === '/' || pathname === '/index.html' || pathname === '/home.css' || pathname === '/site.css') {
+      const file = pathname === '/home.css' ? 'home.css' : pathname === '/site.css' ? 'site.css' : 'index.html';
+      const data = await readFile(resolve(root, file));
+      response.writeHead(200, { 'Content-Type': types[extname(file)] }).end(data);
       return;
     }
     const segments = pathname.split('/').filter(Boolean);
