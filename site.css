@@ -20,13 +20,14 @@ body { margin: 0; background: radial-gradient(circle at 87% 5%, #183348 0, trans
 .github-watermark-name { font-size: clamp(15px, 1.7vw, 23px); font-weight: 800; letter-spacing: .04em; line-height: 1.3; }
 .site-footer { display: flex; justify-content: space-between; padding: 23px 0 35px; border-top: 1px solid #263c4a; color: #708c9b; font-size: 11px; letter-spacing: .08em; }
 
-.project-switcher { position: relative; flex: 0 0 auto; }
+.project-switcher { position: relative; display: flex; flex: 0 0 auto; flex-direction: column; align-items: center; gap: 4px; }
 .project-switcher > summary { list-style: none; }
 .project-switcher > summary::-webkit-details-marker { display: none; }
 .project-switcher .brand-mark { position: relative; display: grid; place-items: center; width: 50px; height: 50px; border: 1px solid #76dec4; border-radius: 15px; color: #76dec4; font: italic 35px Georgia, serif; box-shadow: inset 0 0 22px #76dec421; cursor: pointer; transition: background .18s, box-shadow .18s, transform .18s; }
 .project-switcher .brand-mark::after { content: "⌄"; position: absolute; right: -6px; bottom: -6px; display: grid; place-items: center; width: 19px; height: 19px; border: 1px solid #76dec4; border-radius: 7px; background: #16352f; color: #b0f4df; font: 700 16px/1 sans-serif; }
 .project-switcher .brand-mark:hover, .project-switcher[open] .brand-mark { background: #173e37; box-shadow: 0 0 0 4px #76dec421; transform: translateY(-1px); }
 .project-switcher .brand-mark:focus-visible, .project-menu a:focus-visible { outline: 2px solid #f5ce74; outline-offset: 3px; }
+.chapter-switcher-hint { color: #a9c5c8; font-size: 10px; line-height: 1.2; letter-spacing: .03em; white-space: nowrap; }
 .project-menu { position: absolute; top: calc(100% + 16px); left: 0; width: 310px; max-width: calc(100vw - 32px); padding: 10px; border: 1px solid #42695f; border-radius: 16px; background: #102634; box-shadow: 0 20px 50px #0009; }
 .project-menu-heading { display: block; padding: 9px 12px 12px; color: #83acb5; font-size: 11px; font-weight: 800; letter-spacing: .14em; }
 .project-menu a { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 8px 12px; border-radius: 9px; color: #e0ebef; text-decoration: none; font-size: 14px; font-weight: 700; }
@@ -57,8 +58,7 @@ body { margin: 0; background: radial-gradient(circle at 87% 5%, #183348 0, trans
   background: linear-gradient(to bottom, rgba(255, 255, 255, .055), transparent);
 }
 .model-nav-meta { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 3px 6px 10px; }
-.model-nav-meta strong { display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px; border: 1px solid rgba(125, 231, 202, .32); border-radius: 999px; background: rgba(125, 231, 202, .10); color: #baf5df; font-size: 12px; letter-spacing: .04em; }
-.model-nav-meta strong::before { content: "↓"; color: #7ce4c4; font-size: 15px; line-height: 1; }
+.model-nav-meta strong { color: #e7f8f2; font-size: 12px; letter-spacing: .1em; }
 .model-nav-meta span { color: #a9c5c8; font-size: 11px; }
 .model-nav-row { position: relative; display: grid; grid-template-columns: 42px minmax(0, 1fr) 42px; align-items: stretch; gap: 8px; min-width: 0; }
 .model-nav-shell .model-nav { min-width: 0; width: 100%; margin: 0; padding: 2px; border: 0; user-select: none; }
