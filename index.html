@@ -3,13 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0d1726">
+  <meta name="theme-color" content="#0d0f12">
   <meta name="description" content="通过交互模型探索大学物理中的电磁学与光学规律。">
   <title>大学物理交互模型</title>
   <link rel="stylesheet" href="site.css">
   <link rel="stylesheet" href="home.css">
+  <link rel="stylesheet" href="lab-interface.css">
 </head>
 <body class="home-page">
+  <canvas class="home-particles" id="home-particles" aria-hidden="true"></canvas>
+  <a class="skip-link" href="#main-content">跳到项目内容</a>
   <div class="app-shell home-shell">
     <header class="site-header home-header">
       <div class="home-mark" aria-hidden="true">ϵ</div>
@@ -20,7 +23,7 @@
       <div class="header-note">从公式到可视化实验</div>
     </header>
 
-    <main class="home-main">
+    <main class="home-main" id="main-content">
       <section class="home-hero" aria-labelledby="home-title">
         <p class="home-kicker">INTERACTIVE PHYSICS LAB</p>
         <h2 id="home-title">让抽象规律，<br><em>在实验中变得可见。</em></h2>
@@ -78,5 +81,6 @@
       <a href="https://github.com/JVzi12-25/College-Physics-Digital-Models">GitHub 项目仓库 ↗</a>
     </footer>
   </div>
+  <script type="module" src="home-particles.js"></script>
 </body>
 </html>

@@ -13,8 +13,12 @@ const types = {
 createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
-    if (pathname === '/' || pathname === '/index.html' || pathname === '/home.css' || pathname === '/site.css') {
-      const file = pathname === '/home.css' ? 'home.css' : pathname === '/site.css' ? 'site.css' : 'index.html';
+    if (pathname === '/' || pathname === '/index.html' || pathname === '/home.css' || pathname === '/site.css' || pathname === '/lab-interface.css' || pathname === '/home-particles.js') {
+      const file = pathname === '/home.css' ? 'home.css'
+        : pathname === '/site.css' ? 'site.css'
+        : pathname === '/lab-interface.css' ? 'lab-interface.css'
+        : pathname === '/home-particles.js' ? 'home-particles.js'
+        : 'index.html';
       const data = await readFile(resolve(root, file));
       response.writeHead(200, { 'Content-Type': types[extname(file)] }).end(data);
       return;

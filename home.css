@@ -1,4 +1,7 @@
 .home-shell { max-width: 1240px; }
+.home-page { isolation: isolate; }
+.home-particles { position: fixed; z-index: 0; inset: 0; width: 100%; height: 100%; opacity: .5; pointer-events: none; mix-blend-mode: screen; }
+.home-shell { position: relative; z-index: 1; }
 .home-header { gap: 16px; }
 .home-mark { display: grid; place-items: center; width: 50px; height: 50px; flex: 0 0 auto; border: 1px solid #76dec4; border-radius: 15px; color: #76dec4; font: italic 35px Georgia,serif; box-shadow: inset 0 0 22px #76dec421; }
 .home-header .brand-copy h1 { margin-top: 4px; font-size: 20px; }
@@ -50,6 +53,11 @@
   .home-footer { align-items: flex-start; flex-direction: column; }
 }
 
+@media (max-width:640px) {
+  .home-particles { opacity: .34; }
+}
+
 @media (prefers-reduced-motion:reduce) {
   .chapter-card { transition:none; }
+  .home-particles { opacity: .24; }
 }

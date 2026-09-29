@@ -3,14 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0d1726">
+  <meta name="theme-color" content="#0d0f12">
   <meta name="description" content="交互探索反射与折射、透镜成像、双缝干涉和单缝衍射。">
   <title>光学 · 大学物理交互模型</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="../site.css">
+  <link rel="stylesheet" href="../lab-interface.css">
   <script type="module" src="app.js"></script>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">跳到实验内容</a>
   <div class="app-shell">
     <header class="site-header">
       <details class="project-switcher">
@@ -30,7 +32,7 @@
       <div class="github-watermark" aria-label="GitHub 用户名 JVzi12-25"><span class="github-watermark-label">GITHUB</span><span class="github-watermark-name">@JVzi12-25</span></div>
     </header>
 
-    <main>
+    <main id="main-content">
       <div class="intro">
         <div>
           <p class="section-kicker">INTERACTIVE LAB / 03</p>
@@ -110,7 +112,7 @@
           <div class="canvas-card">
             <div class="canvas-topline"><span class="live-dot"></span> 双缝与屏上强度分布 <span class="canvas-hint">亮度按归一化强度显示</span></div>
             <canvas id="double-slit-canvas" aria-label="双缝波源、干涉条纹和屏上归一化光强曲线"></canvas>
-            <div class="canvas-footer"><span>明纹：d sin θ = mλ</span><span>暗纹：d sin θ = (m + ½)λ</span></div>
+            <div class="canvas-footer"><span>明纹：d sin θ = mλ</span><span>暗纹：d sin θ = (m + ½)λ</span><span class="curve-legend"><i></i>当前参数</span><span class="curve-legend comparison-legend" id="double-comparison-legend" hidden><i></i>对照曲线</span></div>
           </div>
           <aside class="control-card" aria-label="双缝干涉参数">
             <h4>实验参数</h4>
@@ -119,7 +121,12 @@
             <label class="range-control" for="double-screen-distance"><span>屏距 L</span><output id="double-screen-distance-value">1.5 m</output><input id="double-screen-distance" type="range" min="0.1" max="10" step="0.1" value="1.5"></label>
             <div class="readout"><span>相邻亮纹间距 Δy</span><strong id="fringe-spacing">—</strong></div>
             <div class="readout emph"><span>中央亮纹级次</span><strong>m = 0</strong></div>
-            <p class="interpretation">屏上曲线使用双点源干涉强度；可见范围随条纹间距自动缩放。</p>
+            <div class="view-control" aria-label="双缝图样观察范围">
+              <label class="range-control view-range-control" for="double-view-range"><span>屏幕半范围（mm）</span><output id="double-view-range-value">±5.5 mm</output><input id="double-view-range" class="view-range" data-view-range="double" type="range" min="0.2" max="50" step="0.1" value="5.5"></label>
+              <div class="view-control-actions"><button class="secondary-button" type="button" data-fit-view="double">适配当前参数</button><button class="secondary-button" type="button" data-compare-curve="double" aria-pressed="false">保存当前曲线作对照</button></div>
+              <p class="view-status" id="double-view-status" aria-live="polite">固定屏幕视野：−5.5 至 +5.5 mm</p>
+            </div>
+            <p class="interpretation">固定物理坐标显示真实条纹变化；波长、缝距或屏距变化时，条纹间距也会随之改变。</p>
             <button class="secondary-button" type="button" data-reset="double-slit">恢复默认值</button>
           </aside>
         </div>
@@ -135,7 +142,7 @@
           <div class="canvas-card">
             <div class="canvas-topline"><span class="live-dot"></span> 单缝与衍射强度分布 <span class="canvas-hint">中央光强取极限值 I/I₀ = 1</span></div>
             <canvas id="single-slit-canvas" aria-label="单缝衍射图样和归一化光强曲线"></canvas>
-            <div class="canvas-footer"><span>暗纹：a sin θ = mλ，m = ±1, ±2, …</span><span>中央主极大位于 θ = 0</span></div>
+            <div class="canvas-footer"><span>暗纹：a sin θ = mλ，m = ±1, ±2, …</span><span>中央主极大位于 θ = 0</span><span class="curve-legend"><i></i>当前参数</span><span class="curve-legend comparison-legend" id="single-comparison-legend" hidden><i></i>对照曲线</span></div>
           </div>
           <aside class="control-card" aria-label="单缝衍射参数">
             <h4>实验参数</h4>
@@ -144,6 +151,11 @@
             <label class="range-control" for="single-screen-distance"><span>屏距 L</span><output id="single-screen-distance-value">1.5 m</output><input id="single-screen-distance" type="range" min="0.1" max="10" step="0.1" value="1.5"></label>
             <div class="readout"><span>中央主极大宽度（近轴）</span><strong id="central-width">—</strong></div>
             <div class="readout emph"><span>第一级暗纹角度 |θ₁|</span><strong id="first-minimum">—</strong></div>
+            <div class="view-control" aria-label="单缝图样观察范围">
+              <label class="range-control view-range-control" for="single-view-range"><span>屏幕半范围（mm）</span><output id="single-view-range-value">±50 mm</output><input id="single-view-range" class="view-range" data-view-range="single" type="range" min="1" max="100" step="1" value="50"></label>
+              <div class="view-control-actions"><button class="secondary-button" type="button" data-fit-view="single">适配当前参数</button><button class="secondary-button" type="button" data-compare-curve="single" aria-pressed="false">保存当前曲线作对照</button></div>
+              <p class="view-status" id="single-view-status" aria-live="polite">固定屏幕视野：−50 至 +50 mm</p>
+            </div>
             <p class="interpretation">狭缝变窄时，中央亮纹展宽；波长越长，衍射角也越大。</p>
             <button class="secondary-button" type="button" data-reset="single-slit">恢复默认值</button>
           </aside>

@@ -12,6 +12,9 @@ const defaults = {
   "double-slit": { "double-wavelength": 550, "slit-separation": 0.5, "double-screen-distance": 1.5 },
   "single-slit": { "single-wavelength": 550, "slit-width": 20, "single-screen-distance": 1.5 },
 };
+const defaultViewRanges = { double: 5.5, single: 50 };
+const viewRanges = { ...defaultViewRanges };
+const comparisonCurves = { double: null, single: null };
 
 function canvasContext(canvas) {
   const rect = canvas.getBoundingClientRect();
@@ -49,6 +52,109 @@ function backdrop(ctx, w, h) {
   ctx.strokeStyle = "rgba(132,183,190,.07)"; ctx.lineWidth = 1;
   for (let x = 24; x < w; x += 32) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
   for (let y = 18; y < h; y += 32) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function spectrumColor(lambdaNm, alpha = 1) {
+  const hue = clamp((750 - lambdaNm) * 275 / 370, 0, 275);
+  return `hsla(${hue}, 92%, 68%, ${alpha})`;
+}
+
+function chooseMillimeterStep(rangeMm) {
+  const roughStep = rangeMm * 2 / 6;
+  const magnitude = 10 ** Math.floor(Math.log10(roughStep));
+  const normalized = roughStep / magnitude;
+  const factor = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  return factor * magnitude;
+}
+
+function readWaveParameters(mode) {
+  const isDouble = mode === "double";
+  const lambdaNm = Number($(isDouble ? "#double-wavelength" : "#single-wavelength").value);
+  const slitValue = Number($(isDouble ? "#slit-separation" : "#slit-width").value);
+  return {
+    isDouble,
+    lambdaNm,
+    lambda: lambdaNm * 1e-9,
+    slitValue,
+    slitSize: slitValue * (isDouble ? 1e-3 : 1e-6),
+    screenDistance: Number($(isDouble ? "#double-screen-distance" : "#single-screen-distance").value),
+  };
+}
+
+function updateViewReadout(mode) {
+  const input = $(`#${mode}-view-range`);
+  if (!input) return;
+  const mm = Number(input.value);
+  viewRanges[mode] = mm;
+  $(`#${mode}-view-range-value`).textContent = `±${mm.toFixed(mode === "double" ? 1 : 0)} mm`;
+  $(`#${mode}-view-status`).textContent = `固定屏幕视野：−${mm.toFixed(mode === "double" ? 1 : 0)} 至 +${mm.toFixed(mode === "double" ? 1 : 0)} mm`;
+}
+
+function getIntensity(mode, y, parameters) {
+  return mode === "double"
+    ? doubleSlitIntensity(y, parameters.lambda, parameters.slitSize, parameters.screenDistance)
+    : singleSlitIntensity(y, parameters.lambda, parameters.slitSize, parameters.screenDistance);
+}
+
+function traceIntensityCurve(ctx, mode, parameters, rangeMeters, plot, color, dashed = false) {
+  const plotWidth = plot.right - plot.left;
+  const featureSpacing = parameters.lambda * parameters.screenDistance / parameters.slitSize;
+  const cycles = 2 * rangeMeters / Math.max(featureSpacing, 1e-12);
+  const samples = Math.min(6400, Math.max(360, Math.ceil(cycles * 8)));
+  ctx.beginPath();
+  for (let index = 0; index <= samples; index++) {
+    const fraction = index / samples;
+    const y = (fraction - 0.5) * 2 * rangeMeters;
+    const intensity = getIntensity(mode, y, parameters);
+    const x = plot.left + fraction * plotWidth;
+    const screenY = plot.bottom - intensity * (plot.bottom - plot.top);
+    if (index === 0) ctx.moveTo(x, screenY); else ctx.lineTo(x, screenY);
+  }
+  ctx.setLineDash(dashed ? [5, 4] : []);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = dashed ? 1.8 : 2.3;
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawPhysicalMarkers(ctx, mode, parameters, rangeMeters, plot, canvasHeight) {
+  const rangeMm = rangeMeters * 1000;
+  const plotWidth = plot.right - plot.left;
+  const toX = (y) => plot.left + ((y / rangeMeters + 1) / 2) * plotWidth;
+  const marker = (y, text, color) => {
+    if (Math.abs(y) > rangeMeters) return;
+    const x = toX(y);
+    line(ctx, x, plot.bottom - 4, x, plot.bottom + 3, color, 1.2);
+    if (text) label(ctx, text, x, canvasHeight - 23, color, 8, "center");
+  };
+
+  if (mode === "double") {
+    const fringeSpacing = doubleSlitFringeSpacing(parameters.lambda, parameters.slitSize, parameters.screenDistance);
+    const spacingPx = fringeSpacing / (2 * rangeMeters) * plotWidth;
+    const maxOrder = Math.min(16, Math.floor(rangeMeters / fringeSpacing));
+    if (spacingPx >= 19) {
+      for (let order = -maxOrder; order <= maxOrder; order++) {
+        const ratio = order * parameters.lambda / parameters.slitSize;
+        if (Math.abs(ratio) >= 1) continue;
+        const y = parameters.screenDistance * Math.tan(Math.asin(ratio));
+        marker(y, Math.abs(order) === 1 ? `m=${order}` : "", order === 0 ? "#8ce2ff" : "rgba(140,226,255,.72)");
+      }
+    }
+  } else {
+    const range = Math.min(parameters.slitSize / parameters.lambda, 8);
+    const maxOrder = Math.floor(range);
+    for (let order = 1; order <= maxOrder; order++) {
+      const angle = Math.asin(order * parameters.lambda / parameters.slitSize);
+      const y = parameters.screenDistance * Math.tan(angle);
+      marker(-y, order === 1 ? "m=−1" : "", "rgba(140,226,255,.72)");
+      marker(y, order === 1 ? "m=1" : "", "rgba(140,226,255,.72)");
+    }
+  }
+  label(ctx, `±${rangeMm.toFixed(mode === "double" ? 1 : 0)} mm`, plot.right, canvasHeight - 23, "#8faab1", 8, "right");
 }
 
 function renderRefraction() {
@@ -123,65 +229,127 @@ function renderLens() {
 function drawWaveExperiment(canvasId, mode) {
   const sized = canvasContext($(canvasId)); if (!sized) return;
   const { ctx, w, h } = sized; backdrop(ctx, w, h);
-  const isDouble = mode === "double";
-  const lambda = Number($(isDouble ? "#double-wavelength" : "#single-wavelength").value) * 1e-9;
-  const slitSize = Number($(isDouble ? "#slit-separation" : "#slit-width").value) * (isDouble ? 1e-3 : 1e-6);
-  const screenDistance = Number($(isDouble ? "#double-screen-distance" : "#single-screen-distance").value);
-  const fringeSpacing = isDouble ? doubleSlitFringeSpacing(lambda, slitSize, screenDistance) : null;
-  const minimumAngle = isDouble ? 0 : singleSlitMinimaAngle(1, lambda, slitSize) * Math.PI / 180;
-  const firstNull = isDouble ? fringeSpacing / 2 : screenDistance * Math.tan(minimumAngle);
-  const visibleRange = isDouble ? Math.max(fringeSpacing * 3.3, 0.003) : Math.max(firstNull * 2.5, 0.002);
-  const cy = h * 0.51, slitX = w * 0.16, screenX = w * 0.49;
-  const metersToPixels = (h - 64) / (2 * visibleRange);
-  const plotLeft = w * 0.61, plotRight = w - 20, plotTop = h * 0.2, plotBottom = h * 0.8;
+  const parameters = readWaveParameters(mode);
+  const { isDouble, lambdaNm, lambda, slitValue, slitSize, screenDistance } = parameters;
+  const visibleRange = (viewRanges[mode] || defaultViewRanges[mode]) / 1000;
+  const cy = h * 0.52, slitX = w * 0.15;
+  const distanceProgress = (Math.log10(screenDistance) + 1) / 2;
+  const screenX = w * (0.43 + 0.08 * distanceProgress);
+  const plotLeft = Math.max(w * 0.61, screenX + 44), plotRight = w - 20;
+  const plotTop = Math.max(68, h * 0.2), plotBottom = h * 0.75;
+  const screenTop = 57, screenBottom = h - 27, screenCenter = (screenTop + screenBottom) / 2;
+  const screenHalf = (screenBottom - screenTop) / 2;
+  const waveColor = spectrumColor(lambdaNm);
+  const waveColorSoft = spectrumColor(lambdaNm, 0.3);
+  const meterRange = visibleRange;
+  const plot = { left: plotLeft, right: plotRight, top: plotTop, bottom: plotBottom };
+
+  updateViewReadout(mode);
   label(ctx, isDouble ? "相干光源" : "单色平面波", 18, 24, "#a9c8cd", 10);
   label(ctx, "观察屏", screenX, 24, "#a9c8cd", 10, "center");
   label(ctx, "归一化强度 I/I₀", (plotLeft + plotRight) / 2, 24, "#a9c8cd", 10, "center");
+
+  const dimensionY = 45;
+  arrow(ctx, slitX + 9, dimensionY, screenX - 8, dimensionY, "rgba(161,202,210,.62)", 1);
+  arrow(ctx, screenX - 8, dimensionY, slitX + 9, dimensionY, "rgba(161,202,210,.62)", 1);
+  label(ctx, `L = ${screenDistance.toFixed(1)} m`, (slitX + screenX) / 2, dimensionY - 5, "#b9ced2", 9, "center");
+
   if (isDouble) {
-    const slitGap = Math.max(13, Math.min(25, h * 0.08));
-    ctx.fillStyle = "#2f4d58"; ctx.fillRect(slitX - 4, cy - h * 0.35, 8, h * 0.7);
-    ctx.clearRect(slitX - 5, cy - slitGap / 2 - 3, 10, 6); ctx.clearRect(slitX - 5, cy + slitGap / 2 - 3, 10, 6);
-    ctx.fillStyle = "#8ce2ff"; ctx.fillRect(slitX - 2, cy - slitGap / 2 - 2, 4, 4); ctx.fillRect(slitX - 2, cy + slitGap / 2 - 2, 4, 4);
-    for (const originY of [cy - slitGap / 2, cy + slitGap / 2]) for (const radius of [24, 45, 66, 87]) {
-      ctx.beginPath(); ctx.arc(slitX, originY, radius, -Math.PI / 2, Math.PI / 2);
-      ctx.strokeStyle = "rgba(126,220,255,.15)"; ctx.lineWidth = 1; ctx.stroke();
+    const slitGap = clamp(h * 0.06 * (slitValue / 0.5), h * 0.018, h * 0.32);
+    const openingHeight = clamp(h * 0.018, 5, 9);
+    const sources = [cy - slitGap / 2, cy + slitGap / 2];
+    ctx.fillStyle = "#314b56"; ctx.fillRect(slitX - 4, cy - h * 0.34, 8, h * 0.68);
+    for (const originY of sources) {
+      ctx.clearRect(slitX - 5, originY - openingHeight / 2, 10, openingHeight);
+      ctx.fillStyle = waveColor; ctx.fillRect(slitX - 2, originY - openingHeight / 2, 4, openingHeight);
     }
+    const ringPitch = clamp(25 * (lambdaNm / 550), 14, 46);
+    ctx.save(); ctx.shadowColor = waveColor; ctx.shadowBlur = 7;
+    for (const originY of sources) {
+      for (let radius = ringPitch; radius <= h * 0.31; radius += ringPitch) {
+        ctx.beginPath(); ctx.arc(slitX, originY, radius, -Math.PI / 2, Math.PI / 2);
+        ctx.strokeStyle = waveColorSoft; ctx.lineWidth = 1.1; ctx.stroke();
+      }
+    }
+    ctx.restore();
+    label(ctx, `d = ${slitValue.toFixed(2)} mm · 示意放大`, slitX + 12, cy + slitGap / 2 + 17, "#b9ced2", 9);
   } else {
-    for (let x = 30; x < slitX - 12; x += 18) line(ctx, x, cy - h * 0.32, x, cy + h * 0.32, "rgba(126,220,255,.22)", 1);
-    const openingHalf = Math.max(6, firstNull * metersToPixels * 0.9);
-    ctx.fillStyle = "#2f4d58";
-    ctx.fillRect(slitX - 4, 22, 8, Math.max(0, cy - openingHalf - 22));
-    ctx.fillRect(slitX - 4, Math.min(h - 22, cy + openingHalf), 8, Math.max(0, h - 22 - (cy + openingHalf)));
-    ctx.fillStyle = "#8ce2ff"; ctx.fillRect(slitX - 2, cy - openingHalf, 4, openingHalf * 2);
-    for (const radius of [28, 50, 72, 94]) {
-      ctx.beginPath(); ctx.arc(slitX, cy, radius, -Math.PI / 2, Math.PI / 2);
-      ctx.strokeStyle = "rgba(126,220,255,.13)"; ctx.lineWidth = 1; ctx.stroke();
+    const ringPitch = clamp(25 * (lambdaNm / 550), 14, 46);
+    for (let x = 30; x < slitX - 12; x += ringPitch) line(ctx, x, cy - h * 0.32, x, cy + h * 0.32, waveColorSoft, 1);
+    const openingHeight = clamp(h * 0.042 * (slitValue / 20), 5, h * 0.34);
+    ctx.fillStyle = "#314b56";
+    ctx.fillRect(slitX - 4, screenTop - 2, 8, Math.max(0, cy - openingHeight / 2 - screenTop + 2));
+    ctx.fillRect(slitX - 4, cy + openingHeight / 2, 8, Math.max(0, screenBottom - cy - openingHeight / 2));
+    ctx.save(); ctx.shadowColor = waveColor; ctx.shadowBlur = 8;
+    ctx.fillStyle = waveColor; ctx.fillRect(slitX - 2, cy - openingHeight / 2, 4, openingHeight);
+    ctx.restore();
+    const sourceCount = clamp(Math.round(openingHeight / 12), 3, 7);
+    const maxRadius = Math.min(h * 0.29, screenX - slitX - 16);
+    for (let source = 0; source < sourceCount; source++) {
+      const fraction = sourceCount === 1 ? 0.5 : source / (sourceCount - 1);
+      const originY = cy + (fraction - 0.5) * openingHeight;
+      for (let radius = ringPitch; radius <= maxRadius; radius += ringPitch) {
+        ctx.beginPath(); ctx.arc(slitX, originY, radius, -Math.PI / 2, Math.PI / 2);
+        ctx.strokeStyle = spectrumColor(lambdaNm, 0.12); ctx.lineWidth = 0.9; ctx.stroke();
+      }
     }
+    label(ctx, `a = ${slitValue} μm · 示意放大`, slitX + 12, cy + openingHeight / 2 + 17, "#b9ced2", 9);
   }
-  const screenTop = 40, screenBottom = h - 24;
-  line(ctx, screenX, screenTop, screenX, screenBottom, "#9eb9c0", 3);
-  for (let py = screenTop; py < screenBottom; py += 2) {
-    const y = ((cy - py) / ((screenBottom - screenTop) / 2)) * visibleRange;
-    const intensity = isDouble ? doubleSlitIntensity(y, lambda, slitSize, screenDistance) : singleSlitIntensity(y, lambda, slitSize, screenDistance);
-    ctx.fillStyle = "rgba(142,222,255," + (0.08 + 0.92 * intensity) + ")";
-    ctx.fillRect(screenX + 5, py, 16, 2.2);
+
+  line(ctx, screenX, screenTop, screenX, screenBottom, "#9eb9c0", 2.2);
+  const featureSpacing = lambda * screenDistance / slitSize;
+  const pixelHeight = 1.6;
+  const subSamples = clamp(Math.ceil((pixelHeight * visibleRange / screenHalf) / Math.max(featureSpacing, 1e-12) * 5), 4, 24);
+  for (let py = screenTop; py < screenBottom; py += pixelHeight) {
+    let intensity = 0;
+    for (let sample = 0; sample < subSamples; sample++) {
+      const sampleY = py + (sample + 0.5) * pixelHeight / subSamples;
+      const y = ((screenCenter - sampleY) / screenHalf) * visibleRange;
+      intensity += getIntensity(mode, y, parameters);
+    }
+    intensity /= subSamples;
+    ctx.fillStyle = spectrumColor(lambdaNm, 0.1 + 0.9 * intensity);
+    ctx.fillRect(screenX + 5, py, 12, pixelHeight + 0.25);
   }
-  label(ctx, "y = 0", screenX + 26, cy + 4, "#c1d2d4", 9);
+  for (const y of [-visibleRange, 0, visibleRange]) {
+    const screenY = screenCenter - y / visibleRange * screenHalf;
+    line(ctx, screenX - 3, screenY, screenX + 3, screenY, y === 0 ? "#e4f7f9" : "#9eb9c0", y === 0 ? 1.5 : 1);
+  }
+  label(ctx, "y = 0", screenX + 21, screenCenter + 4, "#c1d2d4", 9);
+
   line(ctx, plotLeft, plotBottom, plotRight, plotBottom, "#78949e", 1);
-  line(ctx, (plotLeft + plotRight) / 2, plotTop, (plotLeft + plotRight) / 2, plotBottom, "rgba(130,159,169,.42)", 1, [4, 4]);
   line(ctx, plotLeft, plotTop, plotLeft, plotBottom, "#78949e", 1);
-  label(ctx, "1", plotLeft - 7, plotTop + 4, "#96adb4", 9, "right");
-  label(ctx, "0", plotLeft - 7, plotBottom + 3, "#96adb4", 9, "right");
-  ctx.beginPath();
-  const samples = 260;
-  for (let i = 0; i <= samples; i++) {
-    const t = i / samples, y = (t - 0.5) * 2 * visibleRange;
-    const value = isDouble ? doubleSlitIntensity(y, lambda, slitSize, screenDistance) : singleSlitIntensity(y, lambda, slitSize, screenDistance);
-    const px = plotLeft + t * (plotRight - plotLeft), py = plotBottom - value * (plotBottom - plotTop);
-    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  const gridSteps = [0, 0.5, 1];
+  for (const value of gridSteps) {
+    const y = plotBottom - value * (plotBottom - plotTop);
+    line(ctx, plotLeft, y, plotRight, y, value === 0.5 ? "rgba(130,159,169,.22)" : "rgba(130,159,169,.12)", 1, value === 0.5 ? [3, 4] : []);
+    label(ctx, value.toFixed(value === 0 ? 0 : 1), plotLeft - 7, y + 3, "#96adb4", 8, "right");
   }
-  ctx.strokeStyle = "#84e2c5"; ctx.lineWidth = 2.2; ctx.stroke();
-  label(ctx, "屏上范围 ±" + (visibleRange * 1000).toFixed(1) + " mm", (plotLeft + plotRight) / 2, h - 8, "#8faab1", 9, "center");
+
+  const viewRangeMm = visibleRange * 1000;
+  const tickStep = chooseMillimeterStep(viewRangeMm);
+  const decimals = Math.max(0, -Math.floor(Math.log10(tickStep)));
+  for (let yMm = Math.ceil(-viewRangeMm / tickStep) * tickStep; yMm <= viewRangeMm + tickStep * 1e-6; yMm += tickStep) {
+    const x = plotLeft + ((yMm + viewRangeMm) / (2 * viewRangeMm)) * (plotRight - plotLeft);
+    const isCenter = Math.abs(yMm) < tickStep * 1e-6;
+    if (!isCenter) line(ctx, x, plotTop, x, plotBottom, "rgba(130,159,169,.11)", 1);
+    line(ctx, x, plotBottom, x, plotBottom + (isCenter ? 6 : 4), isCenter ? "#a8dce1" : "#78949e", 1);
+    label(ctx, yMm.toFixed(decimals), x, plotBottom + 16, isCenter ? "#d2e8eb" : "#8faab1", 8, "center");
+  }
+
+  const comparison = comparisonCurves[mode];
+  if (comparison) traceIntensityCurve(ctx, mode, comparison, meterRange, plot, "#b58aff", true);
+  traceIntensityCurve(ctx, mode, parameters, meterRange, plot, "#84e2c5");
+  drawPhysicalMarkers(ctx, mode, parameters, meterRange, plot, h);
+  label(ctx, "屏上位置 y（mm）", (plotLeft + plotRight) / 2, h - 7, "#8faab1", 8, "center");
+
+  const compareButton = $(`[data-compare-curve="${mode}"]`);
+  const compareLegend = $(`#${mode}-comparison-legend`);
+  if (compareButton) {
+    compareButton.setAttribute("aria-pressed", String(Boolean(comparison)));
+    compareButton.textContent = comparison ? "清除对照曲线" : "保存当前曲线作对照";
+  }
+  if (compareLegend) compareLegend.hidden = !comparison;
 }
 
 function updateRefraction() {
@@ -251,15 +419,48 @@ $$(".nav-tab[data-target]").forEach((button) => button.addEventListener("click",
 $$("input[type=range],select").forEach((control) => {
   const refreshPanel = () => {
     const panel = control.closest(".model-panel");
-    if (panel && !panel.hidden) updateByPanel[panel.id]();
+    if (panel && !panel.hidden) {
+      if (control.dataset.viewRange) updateViewReadout(control.dataset.viewRange);
+      updateByPanel[panel.id]();
+    }
   };
   control.addEventListener("input", refreshPanel);
   control.addEventListener("change", refreshPanel);
 });
 
+$$("[data-fit-view]").forEach((button) => button.addEventListener("click", () => {
+  const mode = button.dataset.fitView;
+  const parameters = readWaveParameters(mode);
+  let rangeMm;
+  if (mode === "double") {
+    rangeMm = doubleSlitFringeSpacing(parameters.lambda, parameters.slitSize, parameters.screenDistance) * 1000 * 3.3;
+  } else {
+    const angle = singleSlitMinimaAngle(1, parameters.lambda, parameters.slitSize);
+    const firstMinimum = angle === null ? Infinity : parameters.screenDistance * Math.tan(angle * Math.PI / 180);
+    rangeMm = firstMinimum * 1000 * 2.3;
+  }
+  const rangeControl = $(`#${mode}-view-range`);
+  rangeControl.value = String(clamp(rangeMm, Number(rangeControl.min), Number(rangeControl.max)));
+  updateViewReadout(mode);
+  updateByPanel[mode === "double" ? "double-slit" : "single-slit"]();
+  syncRangeNumberInputs();
+}));
+
+$$("[data-compare-curve]").forEach((button) => button.addEventListener("click", () => {
+  const mode = button.dataset.compareCurve;
+  comparisonCurves[mode] = comparisonCurves[mode] ? null : readWaveParameters(mode);
+  updateByPanel[mode === "double" ? "double-slit" : "single-slit"]();
+}));
+
 $$("[data-reset]").forEach((button) => button.addEventListener("click", () => {
   const panel = button.dataset.reset;
   Object.entries(defaults[panel]).forEach(([id, value]) => { $("#" + id).value = value; });
+  if (panel === "double-slit" || panel === "single-slit") {
+    const mode = panel === "double-slit" ? "double" : "single";
+    viewRanges[mode] = defaultViewRanges[mode];
+    $(`#${mode}-view-range`).value = String(defaultViewRanges[mode]);
+    comparisonCurves[mode] = null;
+  }
   updateByPanel[panel]();
   syncRangeNumberInputs();
 }));
